@@ -1,0 +1,72 @@
+// ===================================================================
+// ELÉTRICA ROCAR — site.js
+// Menu mobile, toast global, newsletter, comportamento comum a todas
+// as páginas. Vanilla JS, sem dependências.
+// ===================================================================
+
+document.addEventListener('DOMContentLoaded', () => {
+  initMobileMenu();
+  initNewsletter();
+  markActiveNav();
+});
+
+function initMobileMenu() {
+  const hamburger = document.querySelector('.hamburger');
+  const drawer = document.querySelector('.mobile-drawer');
+  const overlay = document.querySelector('.drawer-overlay');
+  const closeBtn = document.querySelector('.drawer-close');
+  if (!hamburger || !drawer || !overlay) return;
+
+  const open = () => { drawer.classList.add('open'); overlay.classList.add('open'); };
+  const close = () => { drawer.classList.remove('open'); overlay.classList.remove('open'); };
+
+  hamburger.addEventListener('click', open);
+  overlay.addEventListener('click', close);
+  if (closeBtn) closeBtn.addEventListener('click', close);
+  drawer.querySelectorAll('a').forEach(a => a.addEventListener('click', close));
+}
+
+function markActiveNav() {
+  const path = location.pathname.split('/').pop() || 'index.html';
+  document.querySelectorAll('nav.main-nav a, .mobile-drawer nav a').forEach(a => {
+    const href = a.getAttribute('href');
+    if (href === path) a.classList.add('active');
+  });
+}
+
+export function showToast(msg, ms = 1800) {
+  let toast = document.querySelector('.toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.className = 'toast';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => toast.classList.remove('show'), ms);
+}
+window.showToast = showToast;
+
+function initNewsletter() {
+  const form = document.querySelector('.newsletter-form');
+  if (!form) return;
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const input = form.querySelector('input[type="email"]');
+    const btn = form.querySelector('button');
+    if (!input.value) return;
+    const original = btn.textContent;
+    btn.textContent = 'Enviando...';
+    try {
+      const { submitNewsletter } = await import('./supabase-client.js');
+      await submitNewsletter(input.value);
+      btn.textContent = 'Inscrito ✓';
+      input.value = '';
+      setTimeout(() => { btn.textContent = original; }, 2500);
+    } catch (err) {
+      console.error(err);
+      btn.textContent = original;
+    }
+  });
+}
