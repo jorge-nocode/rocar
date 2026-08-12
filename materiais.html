@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fale Conosco | Elétrica Rocar</title>
-<meta name="description" content="Entre em contato com a Elétrica Rocar em Guarulhos - SP. WhatsApp, telefone, e-mail e endereço.">
+<title>Materiais e Peças | Elétrica Rocar</title>
+<meta name="description" content="Peças e materiais para rebobinamento e reparo: fio de cobre, isolação, selo mecânico, capacitores, rolamentos e mais. Elétrica Rocar - Guarulhos, SP.">
 <link rel="icon" href="assets/favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -35,10 +35,10 @@
     <nav class="main-nav">
       <a href="index.html">Início</a>
       <a href="servicos.html">Serviços</a>
-      <a href="materiais.html">Materiais</a>
+      <a href="materiais.html" class="active">Materiais</a>
       <a href="orcamento.html">Orçamento</a>
       <a href="quem-somos.html">Quem Somos</a>
-      <a href="contato.html" class="active">Contato</a>
+      <a href="contato.html">Contato</a>
     </nav>
     <div class="header-actions">
       <button class="hamburger" aria-label="Abrir menu"><span></span><span></span><span></span></button>
@@ -62,65 +62,25 @@
 
 <main>
   <div class="container">
-    <div class="breadcrumb"><a href="index.html">Início</a> / Contato</div>
-    <div class="section-head" style="flex-direction:column;align-items:flex-start;">
-      <span class="eyebrow">Fale Conosco</span>
-      <h2>Estamos aqui para ajudar</h2>
-    </div>
-
-    <div class="contact-grid">
+    <div class="breadcrumb"><a href="index.html">Início</a> / Materiais</div>
+    <div class="section-head">
       <div>
-        <div class="contact-card">
-          <h4>📍 Endereço</h4>
-          <p>Rua Soldado Francisco de Almeida, 40 — Vila Yaya<br>Guarulhos - SP · CEP 07060-021</p>
-        </div>
-        <div class="contact-card">
-          <h4>🕒 Horário de Atendimento</h4>
-          <p>Segunda a Domingo · 09h às 22h</p>
-        </div>
-        <div class="contact-card">
-          <h4>📞 Telefones</h4>
-          <p><a href="tel:+551134353809">(11) 3435-3809</a><br>
-             <a href="https://wa.me/551134353809" target="_blank">(11) 3435-3809 — WhatsApp</a></p>
-        </div>
-        <div class="contact-card">
-          <h4>✉️ E-mail</h4>
-          <p><a href="mailto:eletricarocar@gmail.com">eletricarocar@gmail.com</a></p>
-        </div>
-      </div>
-
-      <div>
-        <div class="form-card">
-          <h3 style="margin-bottom:18px;">Envie uma mensagem</h3>
-          <form id="form-contato">
-            <div class="field">
-              <label for="nome">Nome</label>
-              <input type="text" id="nome" name="nome" required>
-            </div>
-            <div class="form-row">
-              <div class="field">
-                <label for="email">E-mail</label>
-                <input type="email" id="email" name="email">
-              </div>
-              <div class="field">
-                <label for="telefone">Telefone</label>
-                <input type="text" id="telefone" name="telefone">
-              </div>
-            </div>
-            <div class="field">
-              <label for="mensagem">Mensagem</label>
-              <textarea id="mensagem" name="mensagem" required></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary btn-block">Enviar Mensagem</button>
-          </form>
-        </div>
-
-        <iframe class="map-frame" style="margin-top:24px;" loading="lazy"
-          src="https://www.google.com/maps?q=Rua+Soldado+Francisco+de+Almeida,+40,+Vila+Yaya,+Guarulhos+-+SP&output=embed">
-        </iframe>
+        <span class="eyebrow">Peças e Materiais</span>
+        <h2>Materiais para Rebobinamento e Reparo</h2>
+        <p>Trabalhamos com peças e materiais de qualidade para o conserto do seu equipamento. Consulte disponibilidade e preço pelo WhatsApp.</p>
       </div>
     </div>
+
+    <div class="grid-4" id="lista-materiais"><!-- preenchido via JS --></div>
   </div>
+
+  <section class="section-tight" style="background:var(--bg-alt);margin-top:50px;">
+    <div class="container text-center">
+      <h2>Não achou o material que precisa?</h2>
+      <p class="muted">Trabalhamos com fornecedores diversos e conseguimos praticamente qualquer peça para motores, bombas e ferramentas. Manda uma mensagem que a gente confirma.</p>
+      <a href="https://wa.me/551134353809?text=Ol%C3%A1!%20Preciso%20de%20uma%20pe%C3%A7a%20ou%20material.%20Pode%20me%20ajudar%3F" target="_blank" class="btn btn-whats">Chamar no WhatsApp</a>
+    </div>
+  </section>
 </main>
 
 <footer>
@@ -171,6 +131,9 @@
 
 <script src="assets/site.js" type="module"></script>
 <script src="assets/chatbot.js" type="module"></script>
-<script src="assets/forms.js" type="module"></script>
+<script type="module">
+  import { MATERIAIS_EXEMPLO, materialCardHTML } from './assets/supabase-client.js';
+  document.getElementById('lista-materiais').innerHTML = MATERIAIS_EXEMPLO.map(materialCardHTML).join('');
+</script>
 </body>
 </html>

@@ -345,3 +345,97 @@ export function serviceCardHTML(s) {
     </a>
   </article>`;
 }
+
+// ---------------------------------------------------------------
+// Materiais e peças (demo) — venda de peças para rebobinamento/reparo
+// ---------------------------------------------------------------
+const ICONE_ISOLACAO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 9h16M4 14h16"/></svg>';
+const ICONE_CARRETEL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg>';
+const ICONE_SELO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="6"/><path d="M9 14l-2 7 5-2.5L15 21l-2-7"/></svg>';
+const ICONE_CENTRIFUGA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>';
+const ICONE_ENGRENAGEM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.4-2-3.4-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.6a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9-2 3.4 2 1.4a7.6 7.6 0 0 0 0 3l-2 1.4 2 3.4 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.6h4l.5-2.6a7.6 7.6 0 0 0 2.6-1.5l2.3.9 2-3.4-2-1.4z"/></svg>';
+const ICONE_CAPACITOR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4v16M15 4v16M3 12h6M15 12h6"/></svg>';
+const ICONE_ROLAMENTO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.6"/><circle cx="12" cy="5.2" r="1" fill="currentColor" stroke="none"/><circle cx="18.8" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="18.8" r="1" fill="currentColor" stroke="none"/><circle cx="5.2" cy="12" r="1" fill="currentColor" stroke="none"/></svg>';
+const ICONE_CABO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6v3a5 5 0 0 0 5 5h6a5 5 0 0 1 5 5v1"/><path d="M4 4v4M8 4v4"/></svg>';
+const ICONE_INDUZIDO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="20" rx="2"/><path d="M5 6h4M15 6h4M5 12h4M15 12h4M5 18h4M15 18h4"/></svg>';
+
+export const MATERIAIS_EXEMPLO = [
+  {
+    codigo: 'MAT-001',
+    titulo: 'Isolação Branca para Motor',
+    descricao: 'Fita e manta isolante branca para bobinagem de motores elétricos monofásicos e trifásicos.',
+    icone: ICONE_ISOLACAO
+  },
+  {
+    codigo: 'MAT-002',
+    titulo: 'Carretéis de Fio de Cobre',
+    descricao: 'Diversas bitolas de fio de cobre esmaltado disponíveis para rebobinamento.',
+    icone: ICONE_CARRETEL
+  },
+  {
+    codigo: 'MAT-003',
+    titulo: 'Selo Mecânico',
+    descricao: 'Selos mecânicos para bombas d\'água e motores com vedação líquida.',
+    icone: ICONE_SELO
+  },
+  {
+    codigo: 'MAT-004',
+    titulo: 'Centrífuga de Motor',
+    descricao: 'Peça de centrífuga/chave centrífuga para partida de motores monofásicos.',
+    icone: ICONE_CENTRIFUGA
+  },
+  {
+    codigo: 'MAT-005',
+    titulo: 'Peças para Motor Trifásico',
+    descricao: 'Rolamentos, tampas, eixos e demais componentes para motores trifásicos.',
+    icone: ICONE_ENGRENAGEM
+  },
+  {
+    codigo: 'MAT-006',
+    titulo: 'Peças para Motor Monofásico',
+    descricao: 'Capacitor, chave centrífuga, rolamentos e outros componentes para motores monofásicos.',
+    icone: ICONE_ENGRENAGEM
+  },
+  {
+    codigo: 'MAT-007',
+    titulo: 'Capacitores',
+    descricao: 'Capacitores de partida e permanentes em diversas capacitâncias.',
+    icone: ICONE_CAPACITOR
+  },
+  {
+    codigo: 'MAT-008',
+    titulo: 'Rolamentos',
+    descricao: 'Rolamentos em diversos tamanhos para motores, bombas e ferramentas elétricas.',
+    icone: ICONE_ROLAMENTO
+  },
+  {
+    codigo: 'MAT-009',
+    titulo: 'Cabo para Ferramenta Elétrica',
+    descricao: 'Cabos de força para furadeiras, serras, esmerilhadeiras e ferramentas em geral.',
+    icone: ICONE_CABO
+  },
+  {
+    codigo: 'MAT-010',
+    titulo: 'Induzidos',
+    descricao: 'Induzidos para furadeiras, serras mármore e outras ferramentas elétricas.',
+    icone: ICONE_INDUZIDO
+  }
+];
+
+export function materialCardHTML(m) {
+  const msg = `Olá! Tenho interesse em: ${m.titulo}. Vocês têm disponível?`;
+  return `
+  <article class="service-card">
+    <div class="service-photo material-photo">
+      <span class="badge badge-red">Material</span>
+      <div class="material-icon">${m.icone}</div>
+    </div>
+    <div class="service-body">
+      <div>
+        <h3>${m.titulo}</h3>
+        <p class="loc">${m.descricao}</p>
+      </div>
+      <a href="${whatsappLink(msg)}" target="_blank" class="btn btn-whats btn-sm btn-block">Consultar no WhatsApp</a>
+    </div>
+  </article>`;
+}

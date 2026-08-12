@@ -221,6 +221,9 @@ nav.main-nav a:hover,nav.main-nav a.active{color:var(--red);border-bottom-color:
 }
 .service-card:hover{transform:translateY(-4px);box-shadow:var(--card-shadow-hover);}
 .service-photo{position:relative;aspect-ratio:4/3;background:var(--bg-alt);overflow:hidden;}
+.material-photo{display:flex;align-items:center;justify-content:center;}
+.material-icon{width:44%;max-width:80px;color:var(--red);opacity:.85;}
+.material-icon svg{width:100%;height:100%;}
 .service-photo img{width:100%;height:100%;object-fit:cover;}
 .service-photo .badge{position:absolute;top:12px;left:12px;}
 .service-body{padding:18px 18px 20px;display:flex;flex-direction:column;flex:1;justify-content:space-between;}
