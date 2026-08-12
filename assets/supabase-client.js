@@ -384,6 +384,7 @@ export const MATERIAIS_EXEMPLO = [
     titulo: 'Isolação Branca para Motor',
     descricao: 'Fita e manta isolante branca para bobinagem de motores elétricos monofásicos e trifásicos.',
     icone: ICONE_ISOLACAO,
+    foto: 'assets/produto-isolacao.png',
     categoria: 'isolacao',
     aplicacao: 'motores',
     preco: 35
@@ -393,6 +394,7 @@ export const MATERIAIS_EXEMPLO = [
     titulo: 'Carretéis de Fio de Cobre',
     descricao: 'Diversas bitolas de fio de cobre esmaltado disponíveis para rebobinamento.',
     icone: ICONE_CARRETEL,
+    foto: 'assets/produto-fios-cobre.png',
     categoria: 'fios-de-cobre',
     aplicacao: 'motores',
     preco: 55
@@ -402,6 +404,7 @@ export const MATERIAIS_EXEMPLO = [
     titulo: 'Selo Mecânico',
     descricao: 'Selos mecânicos para bombas d\'água e motores com vedação líquida.',
     icone: ICONE_SELO,
+    foto: 'assets/produto-selo-mecanico.png',
     categoria: 'selos-mecanicos',
     aplicacao: 'bombas',
     preco: 40
@@ -411,6 +414,7 @@ export const MATERIAIS_EXEMPLO = [
     titulo: 'Centrífuga de Motor',
     descricao: 'Peça de centrífuga/chave centrífuga para partida de motores monofásicos.',
     icone: ICONE_CENTRIFUGA,
+    foto: 'assets/produto-centrifuga.png',
     categoria: 'centrifugas',
     aplicacao: 'motores',
     preco: 65
@@ -438,6 +442,7 @@ export const MATERIAIS_EXEMPLO = [
     titulo: 'Capacitores',
     descricao: 'Capacitores de partida e permanentes em diversas capacitâncias.',
     icone: ICONE_CAPACITOR,
+    foto: 'assets/produto-capacitores.png',
     categoria: 'capacitores',
     aplicacao: 'motores',
     preco: 22
@@ -447,6 +452,7 @@ export const MATERIAIS_EXEMPLO = [
     titulo: 'Rolamentos',
     descricao: 'Rolamentos em diversos tamanhos para motores, bombas e ferramentas elétricas.',
     icone: ICONE_ROLAMENTO,
+    foto: 'assets/produto-rolamentos.png',
     categoria: 'rolamentos',
     aplicacao: 'geral',
     preco: 28
@@ -465,6 +471,7 @@ export const MATERIAIS_EXEMPLO = [
     titulo: 'Induzidos',
     descricao: 'Induzidos para furadeiras, serras mármore e outras ferramentas elétricas.',
     icone: ICONE_INDUZIDO,
+    foto: 'assets/produto-induzidos.png',
     categoria: 'induzidos',
     aplicacao: 'ferramentas',
     preco: 95
@@ -492,11 +499,14 @@ export function filtrarMateriais({ categoria, aplicacao, busca, codigo, precoMax
 export function materialCardHTML(m) {
   const msg = `Olá! Quero comprar: ${m.titulo} (${m.codigo}). Ainda tem disponível?`;
   const parcela = (m.preco / 3).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const foto = m.foto
+    ? `<img src="${m.foto}" alt="${m.titulo}" loading="lazy">`
+    : `<div class="material-icon">${m.icone}</div>`;
   return `
   <article class="service-card">
-    <div class="service-photo material-photo">
+    <div class="service-photo material-photo${m.foto ? '' : ' sem-foto'}">
       <span class="badge badge-red">${LABELS_CATEGORIA_MATERIAL[m.categoria] || 'Material'}</span>
-      <div class="material-icon">${m.icone}</div>
+      ${foto}
     </div>
     <div class="service-body">
       <div>
