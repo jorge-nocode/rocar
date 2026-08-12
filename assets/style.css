@@ -230,27 +230,6 @@ nav.main-nav a:hover,nav.main-nav a.active{color:var(--red);border-bottom-color:
 .service-price .from{font-size:.7rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;display:block;}
 .service-body .btn{margin-top:14px;}
 
-/* ---------- Category mosaic ---------- */
-.cat-mosaic{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
-.cat-card{
-  position:relative;border-radius:var(--radius-lg);overflow:hidden;min-height:280px;
-  background:#111 center/cover no-repeat;display:flex;align-items:flex-end;
-}
-.cat-card::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.75),rgba(0,0,0,.1) 60%);}
-.cat-card-body{position:relative;z-index:2;padding:26px;color:#fff;}
-.cat-card .eyebrow{color:var(--yellow);}
-.cat-card h3{color:#fff;font-size:1.3rem;margin-bottom:.4em;}
-.cat-card a{font-size:.82rem;font-weight:700;border-bottom:1px solid rgba(255,255,255,.6);padding-bottom:2px;}
-@media(max-width:900px){.cat-mosaic{grid-template-columns:1fr 1fr;}}
-@media(max-width:560px){
-  .cat-mosaic{grid-template-columns:repeat(2,1fr);gap:10px;}
-  .cat-card{min-height:150px;border-radius:14px;}
-  .cat-card-body{padding:14px;}
-  .cat-card h3{font-size:.9rem;margin-bottom:.15em;line-height:1.2;}
-  .cat-card .eyebrow{font-size:.6rem;margin-bottom:.15em;}
-  .cat-card a{font-size:.68rem;}
-}
-
 /* ---------- Sobre / institucional ---------- */
 .about-split{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;}
 .about-split img{border-radius:var(--radius-lg);box-shadow:var(--card-shadow);width:100%;object-fit:cover;aspect-ratio:4/3;}
