@@ -109,22 +109,6 @@
     </div>
   </div>
 
-  <section>
-    <div class="container">
-      <div class="section-head">
-        <div>
-          <span class="eyebrow">Nossos Serviços</span>
-          <h2>O que consertamos</h2>
-          <p>Do motor industrial ao eletrodoméstico de casa.</p>
-        </div>
-        <a href="servicos.html" class="btn btn-outline">Ver Todos os Serviços</a>
-      </div>
-      <div class="grid-4" id="servicos-destaque">
-        <!-- preenchido via JS -->
-      </div>
-    </div>
-  </section>
-
   <section class="section-tight" style="background:var(--bg-alt);">
     <div class="container">
       <div class="section-head">
@@ -375,12 +359,7 @@
 <script src="assets/site.js" type="module"></script>
 <script src="assets/chatbot.js" type="module"></script>
 <script type="module">
-  import { fetchServicos, serviceCardHTML, filtrarMateriais, materialCardHTML } from './assets/supabase-client.js';
-  fetchServicos({ destaque: true, limit: 4 }).then(lista => {
-    const el = document.getElementById('servicos-destaque');
-    if (!lista.length) { el.innerHTML = '<p class="muted">Em breve, novos serviços cadastrados.</p>'; return; }
-    el.innerHTML = lista.map(serviceCardHTML).join('');
-  });
+  import { filtrarMateriais, materialCardHTML } from './assets/supabase-client.js';
 
   (function(){
     const track = document.getElementById('materiais-carousel');

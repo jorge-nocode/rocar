@@ -501,7 +501,6 @@ export function materialCardHTML(m) {
     <div class="service-body">
       <div>
         <h3>${m.titulo}</h3>
-        <p class="loc">${m.descricao}</p>
         <div class="service-price"><span class="from">A partir de</span>${formatBRL(m.preco)}</div>
         <p class="parcela-info">ou 3x de ${parcela} sem juros</p>
       </div>
