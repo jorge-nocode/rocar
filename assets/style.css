@@ -75,8 +75,8 @@ section{padding:44px 0;}
   padding:13px 30px;border-radius:var(--radius-pill);font-weight:700;font-size:.92rem;
   border:none;transition:transform .2s,box-shadow .2s,background .2s;white-space:nowrap;
 }
-.btn-primary{background:var(--red);color:#fff;box-shadow:0 10px 24px rgba(227,6,19,.25);}
-.btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(227,6,19,.35);}
+.btn-primary{background:var(--black);color:#fff;box-shadow:0 10px 24px rgba(0,0,0,.2);}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(0,0,0,.3);background:#000;}
 .btn-whats{background:var(--green);color:#fff;box-shadow:0 10px 24px rgba(31,163,74,.25);}
 .btn-whats:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(31,163,74,.35);background:var(--green-dark);}
 .btn-outline{background:transparent;border:1.5px solid var(--black);color:var(--black);}
