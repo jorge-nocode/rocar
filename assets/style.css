@@ -242,7 +242,14 @@ nav.main-nav a:hover,nav.main-nav a.active{color:var(--red);border-bottom-color:
 .cat-card h3{color:#fff;font-size:1.3rem;margin-bottom:.4em;}
 .cat-card a{font-size:.82rem;font-weight:700;border-bottom:1px solid rgba(255,255,255,.6);padding-bottom:2px;}
 @media(max-width:900px){.cat-mosaic{grid-template-columns:1fr 1fr;}}
-@media(max-width:560px){.cat-mosaic{grid-template-columns:1fr;}}
+@media(max-width:560px){
+  .cat-mosaic{grid-template-columns:repeat(2,1fr);gap:10px;}
+  .cat-card{min-height:150px;border-radius:14px;}
+  .cat-card-body{padding:14px;}
+  .cat-card h3{font-size:.9rem;margin-bottom:.15em;line-height:1.2;}
+  .cat-card .eyebrow{font-size:.6rem;margin-bottom:.15em;}
+  .cat-card a{font-size:.68rem;}
+}
 
 /* ---------- Sobre / institucional ---------- */
 .about-split{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;}
