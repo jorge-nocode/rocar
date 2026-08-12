@@ -179,7 +179,7 @@
 <script src="assets/site.js" type="module"></script>
 <script src="assets/chatbot.js" type="module"></script>
 <script type="module">
-  import { fetchServicoByCodigo, fetchServicos, formatBRL, labelCategoria, labelEstoque, whatsappLinkServico, serviceCardHTML, submitSolicitacaoOrcamento, whatsappLink } from './assets/supabase-client.js';
+  import { fetchServicoByCodigo, fetchServicos, formatBRL, labelCategoria, labelEstoque, whatsappLinkServico, serviceCardHTML, submitSolicitacaoOrcamento, whatsappLink, isServicoSobOrcamento, linkOrcamentoServico } from './assets/supabase-client.js';
 
   const params = new URLSearchParams(location.search);
   const codigo = params.get('codigo');
@@ -200,6 +200,13 @@
       servico = lista[0];
     }
     if (!servico) return;
+
+    // Motores e serviços técnicos complexos não têm página de "produto":
+    // vão direto para o formulário de orçamento.
+    if (isServicoSobOrcamento(servico)) {
+      window.location.replace(linkOrcamentoServico(servico));
+      return;
+    }
 
     document.getElementById('page-title').textContent = servico.titulo + ' | Elétrica Rocar';
     document.getElementById('bc-titulo').textContent = servico.titulo;

@@ -146,6 +146,26 @@ export function whatsappLinkServico(servico) {
 }
 
 // ---------------------------------------------------------------
+// Serviços técnicos complexos (rebobinamento de motores etc.) NUNCA
+// devem ser exibidos como produto com preço fechado — são sempre
+// "sob orçamento" e levam direto ao formulário/WhatsApp de orçamento.
+// ---------------------------------------------------------------
+export const CATEGORIAS_SOB_ORCAMENTO = ['motores-monofasicos', 'motores-trifasicos'];
+
+export function isServicoSobOrcamento(servico) {
+  return CATEGORIAS_SOB_ORCAMENTO.includes(servico.categoria);
+}
+
+export function linkOrcamentoServico(servico) {
+  const params = new URLSearchParams({
+    equipamento: servico.titulo,
+    categoria: servico.categoria,
+    codigo: servico.codigo
+  });
+  return `orcamento.html?${params.toString()}`;
+}
+
+// ---------------------------------------------------------------
 // Fetch de serviços/produtos
 // ---------------------------------------------------------------
 export async function fetchServicos({ categoria, busca, destaque, limit, codigo } = {}) {
@@ -211,10 +231,21 @@ export async function submitNewsletter(email) {
 // ---------------------------------------------------------------
 export function serviceCardHTML(s) {
   const foto = (s.fotos && s.fotos[0]) || 'assets/fotos-oficina/logo-mural.jpeg';
-  const precoTexto = s.preco ? `<span class="from">A partir de</span>${formatBRL(s.preco)}` : 'Sob orçamento';
+  const sobOrcamento = isServicoSobOrcamento(s);
+
+  const link = sobOrcamento
+    ? linkOrcamentoServico(s)
+    : `servico.html?codigo=${encodeURIComponent(s.codigo)}`;
+
+  const precoTexto = sobOrcamento
+    ? '<span class="from">Serviço técnico</span>Sob Orçamento'
+    : (s.preco ? `<span class="from">A partir de</span>${formatBRL(s.preco)}` : 'Sob orçamento');
+
+  const botaoTexto = sobOrcamento ? 'Solicitar Orçamento' : 'Ver Detalhes';
+
   return `
   <article class="service-card">
-    <a href="servico.html?codigo=${encodeURIComponent(s.codigo)}">
+    <a href="${link}">
       <div class="service-photo">
         <span class="badge badge-red">${labelCategoria(s.categoria)}</span>
         <img src="${foto}" alt="${s.titulo}" loading="lazy">
@@ -225,7 +256,7 @@ export function serviceCardHTML(s) {
           <p class="loc">${s.marca || ''}</p>
           <div class="service-price">${precoTexto}</div>
         </div>
-        <a href="servico.html?codigo=${encodeURIComponent(s.codigo)}" class="btn btn-primary btn-sm btn-block">Ver Detalhes</a>
+        <a href="${link}" class="btn btn-primary btn-sm btn-block">${botaoTexto}</a>
       </div>
     </a>
   </article>`;

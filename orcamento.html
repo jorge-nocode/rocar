@@ -63,8 +63,8 @@
     <div class="breadcrumb"><a href="index.html">Home</a> / Orçamento</div>
     <div class="section-head" style="flex-direction:column;align-items:flex-start;">
       <span class="eyebrow">Orçamento Rápido</span>
-      <h2>Solicite seu orçamento</h2>
-      <p class="muted">Preencha os dados abaixo ou chame direto no WhatsApp. Avaliamos o equipamento e retornamos com o valor.</p>
+      <h2 id="orcamento-titulo">Solicite seu orçamento</h2>
+      <p class="muted" id="orcamento-subtitulo">Preencha os dados abaixo ou chame direto no WhatsApp. Avaliamos o equipamento e retornamos com o valor.</p>
     </div>
 
     <div class="detail-grid" style="grid-template-columns:1fr 1fr;">
@@ -194,5 +194,27 @@
 <script src="assets/site.js" type="module"></script>
 <script src="assets/chatbot.js" type="module"></script>
 <script src="assets/forms.js" type="module"></script>
+<script type="module">
+  const params = new URLSearchParams(location.search);
+  const equipamento = params.get('equipamento');
+  const categoria = params.get('categoria');
+
+  if (equipamento) {
+    document.getElementById('orcamento-titulo').textContent = 'Orçamento: ' + equipamento;
+    document.getElementById('orcamento-subtitulo').textContent =
+      'Esse é um serviço técnico avaliado caso a caso. Preencha os dados abaixo que retornamos com o valor.';
+
+    const mapaCategoria = {
+      'motores-monofasicos': 'Motor Elétrico Monofásico',
+      'motores-trifasicos': 'Motor Elétrico Trifásico'
+    };
+    const select = document.getElementById('tipo_equipamento');
+    const valor = mapaCategoria[categoria];
+    if (select && valor) select.value = valor;
+
+    const problema = document.getElementById('problema');
+    if (problema) problema.placeholder = `Referente a: ${equipamento}. Descreva o problema...`;
+  }
+</script>
 </body>
 </html>
