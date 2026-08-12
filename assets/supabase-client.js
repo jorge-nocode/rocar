@@ -462,6 +462,7 @@ export const MATERIAIS_EXEMPLO = [
     titulo: 'Cabo para Ferramenta Elétrica',
     descricao: 'Cabos de força para furadeiras, serras, esmerilhadeiras e ferramentas em geral.',
     icone: ICONE_CABO,
+    foto: 'assets/produto-cabo-ferramenta.webp',
     categoria: 'cabos',
     aplicacao: 'ferramentas',
     preco: 18
