@@ -157,7 +157,7 @@ nav.main-nav a:hover,nav.main-nav a.active{color:var(--red);border-bottom-color:
 .hero-dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.5);cursor:pointer;border:none;padding:0;}
 .hero-dot.active{background:var(--red);}
 @media(max-width:768px){
-  .hero-carousel{aspect-ratio:4/5;max-height:520px;}
+  .hero-carousel{aspect-ratio:1/1;max-height:440px;}
   .hero-slide{background-image:var(--img-mobile) !important;}
 }
 @media(max-height:760px){
