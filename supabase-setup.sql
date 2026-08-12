@@ -139,6 +139,16 @@ create policy "admin gerencia config" on public.site_config
   for all using (auth.jwt() ->> 'email' = 'eletricarocar@gmail.com')
   with check (auth.jwt() ->> 'email' = 'eletricarocar@gmail.com');
 
+-- Leitura pública apenas da chave do chatbot (o widget roda no navegador
+-- do visitante e precisa ler essa chave para chamar a API do Gemini).
+-- ATENÇÃO: como o site é 100% estático (sem backend próprio), essa chave
+-- fica visível no tráfego de rede do navegador de qualquer visitante,
+-- assim como aconteceria com qualquer chamada direta client-side a uma
+-- API de IA. Para reduzir o risco, use uma chave do Gemini com cota/uso
+-- limitado e restrição por domínio (HTTP referrer) no Google AI Studio.
+create policy "publico le chave do chatbot" on public.site_config
+  for select using (chave = 'chatbot_gemini_key');
+
 -- ===================================================================
 -- Storage: bucket de fotos dos serviços
 -- ===================================================================

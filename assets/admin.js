@@ -5,7 +5,7 @@
 // Só funciona depois que assets/supabase-client.js tiver a URL e a
 // chave anon reais preenchidas (ver supabase-setup.sql).
 // ===================================================================
-import { supabase, FOTOS_BUCKET, formatBRL } from './supabase-client.js';
+import { supabase, FOTOS_BUCKET, formatBRL, fetchConfig, salvarConfig } from './supabase-client.js';
 
 const els = {
   offlineNotice: document.querySelector('#offline-notice'),
@@ -24,6 +24,9 @@ const els = {
   servicoForm: document.querySelector('#servico-form'),
   servicoFeedback: document.querySelector('#servico-feedback'),
   fotosInput: document.querySelector('#servico-fotos'),
+  configForm: document.querySelector('#config-form'),
+  configFeedback: document.querySelector('#config-feedback'),
+  geminiKeyInput: document.querySelector('#gemini-key'),
 };
 
 if (!supabase) {
@@ -61,6 +64,10 @@ async function initAdmin() {
   if (els.servicoForm) {
     els.servicoForm.addEventListener('submit', handleServicoSubmit);
   }
+
+  if (els.configForm) {
+    els.configForm.addEventListener('submit', handleConfigSubmit);
+  }
 }
 
 function toggleAuthUI(session) {
@@ -73,6 +80,7 @@ function toggleAuthUI(session) {
     loadOrcamentos();
     loadContato();
     loadEmpresa();
+    loadConfig();
   }
 }
 
@@ -227,4 +235,23 @@ async function loadEmpresa() {
       <td>${e.segmento || '-'}</td>
     </tr>
   `).join('');
+}
+
+async function loadConfig() {
+  if (!els.geminiKeyInput) return;
+  const valor = await fetchConfig('chatbot_gemini_key');
+  els.geminiKeyInput.value = valor || '';
+}
+
+async function handleConfigSubmit(e) {
+  e.preventDefault();
+  const valor = els.geminiKeyInput.value.trim();
+  const { ok, error } = await salvarConfig('chatbot_gemini_key', valor);
+  if (ok) {
+    els.configFeedback.textContent = 'Chave salva com sucesso!';
+    els.configFeedback.className = 'form-feedback ok';
+  } else {
+    els.configFeedback.textContent = 'Erro ao salvar: ' + (error?.message || 'tente novamente.');
+    els.configFeedback.className = 'form-feedback err';
+  }
 }

@@ -1,39 +1,41 @@
 // ===================================================================
 // ELÉTRICA ROCAR — chatbot.js
-// Widget "Técnico Rocar": atendente com respostas rápidas pré-definidas
-// que direcionam para o WhatsApp. Não usa IA generativa (sem custo de
-// API) — pode ser trocado por integração com Gemini/OpenAI depois,
-// seguindo o mesmo padrão do chatbot.js do blueprint original (QRV).
-// Injeta o próprio HTML, então basta um <script> em cada página.
+// Widget "Técnico Rocar": chat com IA generativa (Google Gemini).
+// A chave da API é lida da tabela public.site_config (chave
+// 'chatbot_gemini_key') no Supabase, gerenciável pelo painel admin.
+// Sem chave configurada (ou modo offline), o widget avisa o visitante
+// e direciona para o WhatsApp. Injeta o próprio HTML — basta um
+// <script type="module"> em cada página.
 // ===================================================================
-import { whatsappLink } from './supabase-client.js';
+import { fetchConfig } from './supabase-client.js';
 
-const RESPOSTAS = [
-  {
-    label: 'Quero orçamento de motor elétrico',
-    resposta: 'Rebobinamento de motor monofásico a partir de R$180 e trifásico a partir de R$350. O valor final depende da avaliação. Quer que eu já te leve pro WhatsApp com isso?',
-    whats: 'Olá, Técnico Rocar! Preciso de um orçamento para motor elétrico.'
-  },
-  {
-    label: 'Conserto de eletrodoméstico',
-    resposta: 'Consertamos micro-ondas, air fryer, liquidificador, ventilador e outros eletrodomésticos. Diagnóstico é gratuito na maioria dos casos.',
-    whats: 'Olá, Técnico Rocar! Tenho um eletrodoméstico com defeito.'
-  },
-  {
-    label: 'Bomba de piscina ou de poço',
-    resposta: 'Fazemos manutenção completa de bombas de piscina e de poço, com revisão de vedação e rolamento.',
-    whats: 'Olá, Técnico Rocar! Preciso de manutenção em uma bomba d\'água.'
-  },
-  {
-    label: 'Horário de funcionamento',
-    resposta: 'Estamos abertos todos os dias, das 9h às 22h, na Rua Soldado Francisco de Almeida, 40 — Vila Yaya, Guarulhos.',
-  },
-  {
-    label: 'Falar direto com um técnico',
-    resposta: 'Perfeito, vou te levar pro WhatsApp agora.',
-    whats: 'Olá! Vim pelo site e quero falar com um técnico.'
-  },
-];
+const GEMINI_MODEL = 'gemini-2.5-flash';
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+
+const SYSTEM_PROMPT = `Você é o Técnico Rocar, um assistente virtual e técnico especializado da Elétrica Rocar (oficina de manutenção e retífica de motores elétricos, ferramentas elétricas, bombas e eletrodomésticos).
+
+Seu tom de voz é profissional, prestativo, direto e amigável.
+
+Endereço: Rua Soldado Francisco de Almeida, 40 — Vila Yaya, Guarulhos.
+Atendimento: Todos os dias, das 9h às 22h.
+
+Seu objetivo é tirar dúvidas sobre consertos, orçamento, serviços de enrolamento/retífica e incentivar o cliente a clicar no botão de direcionamento para o WhatsApp para fechar o orçamento direto com a equipe.
+
+Responda sempre em português do Brasil, de forma curta e objetiva (no máximo 3-4 frases). Nunca invente preços exatos fechados — sempre diga que o valor final depende de avaliação técnica e incentive o cliente a mandar mensagem no WhatsApp para receber um orçamento preciso.`;
+
+let geminiKeyCache;
+let historico = [];
+
+async function getGeminiKey() {
+  if (geminiKeyCache !== undefined) return geminiKeyCache;
+  try {
+    geminiKeyCache = await fetchConfig('chatbot_gemini_key');
+  } catch (e) {
+    console.error(e);
+    geminiKeyCache = null;
+  }
+  return geminiKeyCache;
+}
 
 function injectMarkup() {
   const wrap = document.createElement('div');
@@ -52,9 +54,16 @@ function injectMarkup() {
         <button class="chat-close" id="chat-close" aria-label="Fechar">&times;</button>
       </div>
       <div class="chat-body" id="chat-body">
-        <div class="chat-bubble">Olá! Eu sou o Técnico Rocar 👋 Como posso te ajudar hoje?</div>
-        <div class="chat-quick" id="chat-quick"></div>
+        <div class="chat-messages" id="chat-messages">
+          <div class="chat-bubble bot">Olá! Eu sou o Técnico Rocar 👋 Me conta o que aconteceu com seu equipamento que eu te ajudo.</div>
+        </div>
       </div>
+      <form class="chat-input-row" id="chat-form">
+        <input type="text" id="chat-input" placeholder="Digite sua mensagem..." autocomplete="off" maxlength="500">
+        <button type="submit" class="chat-send" id="chat-send" aria-label="Enviar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+        </button>
+      </form>
       <div class="chat-footer">
         <a href="https://wa.me/551134353809" target="_blank" class="btn btn-whats btn-sm btn-block">Falar direto no WhatsApp</a>
       </div>
@@ -63,48 +72,104 @@ function injectMarkup() {
   document.body.appendChild(wrap);
 }
 
-function renderQuickReplies() {
-  const quick = document.getElementById('chat-quick');
-  quick.innerHTML = RESPOSTAS.map((r, i) => `<button data-i="${i}">${r.label}</button>`).join('');
-  quick.querySelectorAll('button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const item = RESPOSTAS[btn.dataset.i];
-      addBubble(item.label, true);
-      setTimeout(() => {
-        addBubble(item.resposta, false);
-        if (item.whats) {
-          const link = document.createElement('a');
-          link.href = whatsappLink(item.whats);
-          link.target = '_blank';
-          link.className = 'btn btn-whats btn-sm';
-          link.style.marginTop = '8px';
-          link.style.display = 'inline-flex';
-          link.textContent = 'Continuar no WhatsApp';
-          document.getElementById('chat-body').appendChild(link);
-          document.getElementById('chat-body').scrollTop = document.getElementById('chat-body').scrollHeight;
-        }
-      }, 400);
-    });
-  });
-}
-
 function addBubble(text, fromUser) {
+  const messages = document.getElementById('chat-messages');
   const body = document.getElementById('chat-body');
   const bubble = document.createElement('div');
-  bubble.className = 'chat-bubble';
-  if (fromUser) {
-    bubble.style.marginLeft = 'auto';
-    bubble.style.background = 'var(--red)';
-    bubble.style.color = '#fff';
-  }
+  bubble.className = 'chat-bubble' + (fromUser ? ' user' : ' bot');
   bubble.textContent = text;
-  body.insertBefore(bubble, document.getElementById('chat-quick'));
+  messages.appendChild(bubble);
   body.scrollTop = body.scrollHeight;
+}
+
+function showTyping(show) {
+  const messages = document.getElementById('chat-messages');
+  const body = document.getElementById('chat-body');
+  let indicator = document.getElementById('chat-typing');
+  if (show) {
+    if (indicator) return;
+    indicator = document.createElement('div');
+    indicator.className = 'chat-bubble bot chat-typing';
+    indicator.id = 'chat-typing';
+    indicator.innerHTML = '<span></span><span></span><span></span>';
+    messages.appendChild(indicator);
+    body.scrollTop = body.scrollHeight;
+  } else if (indicator) {
+    indicator.remove();
+  }
+}
+
+function toggleInput(disabled) {
+  const input = document.getElementById('chat-input');
+  const send = document.getElementById('chat-send');
+  if (input) input.disabled = disabled;
+  if (send) send.disabled = disabled;
+}
+
+async function responderComGemini(mensagemUsuario) {
+  historico.push({ role: 'user', parts: [{ text: mensagemUsuario }] });
+  // mantém só as últimas mensagens para não deixar o payload gigante
+  if (historico.length > 20) historico = historico.slice(-20);
+
+  showTyping(true);
+  toggleInput(true);
+
+  const key = await getGeminiKey();
+  if (!key) {
+    showTyping(false);
+    toggleInput(false);
+    addBubble('No momento o chat automático não está disponível, mas te atendemos rapidinho pelo WhatsApp. Clica no botão abaixo!', false);
+    return;
+  }
+
+  try {
+    const resp = await fetch(`${GEMINI_URL}?key=${encodeURIComponent(key)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        contents: historico,
+        generationConfig: { temperature: 0.7, maxOutputTokens: 300 }
+      })
+    });
+
+    if (!resp.ok) throw new Error(`Gemini respondeu ${resp.status}`);
+
+    const data = await resp.json();
+    const textoResposta = (data?.candidates?.[0]?.content?.parts || [])
+      .map(p => p.text || '')
+      .join('')
+      .trim() || 'Desculpa, não consegui entender direito. Pode reformular ou chamar a gente no WhatsApp?';
+
+    historico.push({ role: 'model', parts: [{ text: textoResposta }] });
+    showTyping(false);
+    addBubble(textoResposta, false);
+  } catch (e) {
+    console.error(e);
+    showTyping(false);
+    addBubble('Tive um problema para responder agora. Chama a gente no WhatsApp que resolvemos rapidinho!', false);
+  } finally {
+    toggleInput(false);
+    document.getElementById('chat-input')?.focus();
+  }
+}
+
+function wireForm() {
+  const form = document.getElementById('chat-form');
+  const input = document.getElementById('chat-input');
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const texto = input.value.trim();
+    if (!texto) return;
+    input.value = '';
+    addBubble(texto, true);
+    responderComGemini(texto);
+  });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   injectMarkup();
-  renderQuickReplies();
+  wireForm();
   const toggle = document.getElementById('chat-toggle');
   const label = document.getElementById('chat-label');
   const win = document.getElementById('chat-window');
