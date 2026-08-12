@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css?v=4">
+<link rel="stylesheet" href="assets/style.css?v=5">
 </head>
 <body>
 
@@ -64,15 +64,14 @@
 
 <main>
   <div class="container">
-    <section class="hero" style="background-image:url('assets/fotos-oficina/fachada-dia.jpeg');">
-      <div class="hero-content">
-        <span class="eyebrow">Guarulhos - SP · Desde a Vila Yaya</span>
-        <h1>Conserto e manutenção de motores elétricos e eletrodomésticos</h1>
-        <p>Rebobinamento de motores, reparo de micro-ondas, air fryer, bombas de piscina e ferramentas elétricas. Diagnóstico honesto e orçamento sem enrolação.</p>
-        <div class="hero-cta">
-          <a href="https://wa.me/551134353809?text=Ol%C3%A1!%20Vim%20pelo%20site%20e%20preciso%20de%20um%20or%C3%A7amento." target="_blank" class="btn btn-whats">Falar no WhatsApp</a>
-          <a href="orcamento.html" class="btn btn-outline-light">Solicitar Orçamento</a>
-        </div>
+    <section class="hero-carousel" id="hero-carousel">
+      <a href="servicos.html?categoria=eletrodomesticos" class="hero-slide active" style="--img-desktop:url('assets/banner-eletrodomesticos.png');--img-mobile:url('assets/banner-eletrodomesticos-mobile.png');" aria-label="Eletrodomésticos revisados"></a>
+      <a href="orcamento.html?categoria=motores-monofasicos" class="hero-slide" style="--img-desktop:url('assets/banner-motores.png');--img-mobile:url('assets/banner-motores-mobile.png');" aria-label="Rebobinamento de motores elétricos"></a>
+      <a href="servicos.html?categoria=ferramentas" class="hero-slide" style="--img-desktop:url('assets/banner-ferramentas.png');--img-mobile:url('assets/banner-ferramentas-mobile.png');" aria-label="Manutenção de ferramentas elétricas"></a>
+      <div class="hero-dots">
+        <button class="hero-dot active" data-slide="0" aria-label="Slide 1"></button>
+        <button class="hero-dot" data-slide="1" aria-label="Slide 2"></button>
+        <button class="hero-dot" data-slide="2" aria-label="Slide 3"></button>
       </div>
     </section>
 
@@ -266,6 +265,41 @@
     if (!lista.length) { el.innerHTML = '<p class="muted">Em breve, novos serviços cadastrados.</p>'; return; }
     el.innerHTML = lista.map(serviceCardHTML).join('');
   });
+</script>
+<script>
+  (function(){
+    const carrossel = document.getElementById('hero-carousel');
+    if (!carrossel) return;
+    const slides = carrossel.querySelectorAll('.hero-slide');
+    const dots = carrossel.querySelectorAll('.hero-dot');
+    let atual = 0;
+    let timer;
+
+    function irPara(i) {
+      slides[atual].classList.remove('active');
+      dots[atual].classList.remove('active');
+      atual = i % slides.length;
+      slides[atual].classList.add('active');
+      dots[atual].classList.add('active');
+    }
+
+    function proximo() { irPara(atual + 1); }
+
+    function iniciarAuto() {
+      clearInterval(timer);
+      timer = setInterval(proximo, 5000);
+    }
+
+    dots.forEach((dot, i) => {
+      dot.addEventListener('click', (e) => {
+        e.preventDefault();
+        irPara(i);
+        iniciarAuto();
+      });
+    });
+
+    iniciarAuto();
+  })();
 </script>
 </body>
 </html>

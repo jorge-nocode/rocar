@@ -143,24 +143,25 @@ nav.main-nav a:hover,nav.main-nav a.active{color:var(--red);border-bottom-color:
 .mobile-drawer nav a{padding:14px 8px;border-bottom:1px solid var(--border);font-weight:600;}
 .drawer-close{background:none;border:none;font-size:1.6rem;line-height:1;}
 
-/* ---------- Hero ---------- */
-.hero{
+/* ---------- Hero Carousel ---------- */
+.hero-carousel{
   position:relative;border-radius:var(--radius-lg);overflow:hidden;margin:14px auto 0;
-  min-height:56vh;max-height:460px;display:flex;align-items:flex-end;background:#111 center/cover no-repeat;
+  aspect-ratio:1915/821;max-height:460px;background:#111;
 }
-.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.78) 0%,rgba(0,0,0,.35) 55%,rgba(0,0,0,.15) 100%);}
-.hero-content{position:relative;z-index:2;padding:30px 36px;color:#fff;max-width:600px;}
-.hero-content .eyebrow{color:var(--red-light);margin-bottom:.35em;}
-.hero-content h1{font-size:2.05rem;color:#fff;margin-bottom:.25em;}
-.hero-content p{font-size:.94rem;color:rgba(255,255,255,.88);max-width:500px;margin-bottom:0;}
-.hero-cta{display:flex;gap:12px;margin-top:16px;flex-wrap:wrap;}
+.hero-slide{
+  position:absolute;inset:0;display:block;background:var(--img-desktop) center/cover no-repeat;
+  opacity:0;visibility:hidden;transition:opacity .6s ease;
+}
+.hero-slide.active{opacity:1;visibility:visible;z-index:2;}
+.hero-dots{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:3;}
+.hero-dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.5);cursor:pointer;border:none;padding:0;}
+.hero-dot.active{background:var(--red);}
 @media(max-width:768px){
-  .hero{min-height:auto;max-height:none;background-image:var(--hero-mobile,none) !important;}
-  .hero-content{padding:24px 20px;}
-  .hero-content h1{font-size:1.6rem;}
+  .hero-carousel{aspect-ratio:4/5;max-height:520px;}
+  .hero-slide{background-image:var(--img-mobile) !important;}
 }
 @media(max-height:760px){
-  .hero{min-height:46vh;}
+  .hero-carousel{max-height:360px;}
 }
 
 /* ---------- Trust bar ---------- */
