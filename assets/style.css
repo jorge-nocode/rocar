@@ -230,6 +230,32 @@ nav.main-nav a:hover,nav.main-nav a.active{color:var(--red);border-bottom-color:
 .service-price .from{font-size:.7rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;display:block;}
 .service-body .btn{margin-top:14px;}
 
+/* ---------- Category mosaic (foto inteira + texto sobreposto, estilo QRV) ---------- */
+.cat-mosaic{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.cat-card{
+  position:relative;border-radius:16px;overflow:hidden;aspect-ratio:4/3;
+  background:#111 center/cover no-repeat;display:flex;align-items:flex-end;
+  box-shadow:var(--card-shadow);transition:transform .2s;
+}
+.cat-card:hover{transform:translateY(-3px);}
+.cat-card::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.82) 0%,rgba(0,0,0,.25) 55%,rgba(0,0,0,.05) 100%);}
+.cat-card-body{position:relative;z-index:2;padding:14px 16px;color:#fff;width:100%;}
+.cat-card .eyebrow{color:#fff;opacity:.85;margin-bottom:.15em;font-size:.66rem;}
+.cat-card h3{color:#fff;font-size:1.05rem;font-weight:800;text-transform:uppercase;margin:0 0 8px;line-height:1.15;}
+.cat-pill{
+  display:inline-flex;align-items:center;background:#fff;color:var(--red);
+  font-weight:700;font-size:.72rem;padding:6px 16px;border-radius:30px;
+}
+@media(max-width:900px){.cat-mosaic{grid-template-columns:repeat(2,1fr);gap:12px;}}
+@media(max-width:560px){
+  .cat-mosaic{gap:10px;}
+  .cat-card{aspect-ratio:1/1;border-radius:14px;}
+  .cat-card-body{padding:10px 12px;}
+  .cat-card h3{font-size:.85rem;margin-bottom:5px;}
+  .cat-card .eyebrow{font-size:.58rem;}
+  .cat-pill{font-size:.62rem;padding:5px 12px;}
+}
+
 /* ---------- Sobre / institucional ---------- */
 .about-split{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;}
 .about-split img{border-radius:var(--radius-lg);box-shadow:var(--card-shadow);width:100%;object-fit:cover;aspect-ratio:4/3;}
