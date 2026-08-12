@@ -38,6 +38,7 @@ const RESPOSTAS = [
 function injectMarkup() {
   const wrap = document.createElement('div');
   wrap.innerHTML = `
+    <div class="chat-label" id="chat-label">Técnico Rocar</div>
     <button class="chat-float" id="chat-toggle" aria-label="Falar com o Técnico Rocar">
       <img src="assets/tecnico-rocar-avatar.png" alt="Técnico Rocar">
     </button>
@@ -105,8 +106,10 @@ document.addEventListener('DOMContentLoaded', () => {
   injectMarkup();
   renderQuickReplies();
   const toggle = document.getElementById('chat-toggle');
+  const label = document.getElementById('chat-label');
   const win = document.getElementById('chat-window');
   const close = document.getElementById('chat-close');
   toggle.addEventListener('click', () => win.classList.toggle('open'));
+  label.addEventListener('click', () => win.classList.toggle('open'));
   close.addEventListener('click', () => win.classList.remove('open'));
 });
