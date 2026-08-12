@@ -348,6 +348,17 @@ nav.main-nav a:hover,nav.main-nav a.active{color:var(--red);border-bottom-color:
 .tab-panel{display:none;background:var(--panel);border-radius:var(--radius-lg);padding:28px;border:1px solid var(--border);}
 .tab-panel.active{display:block;}
 
+/* ---------- Promo banner (ex.: micro-ondas seminovos) ---------- */
+.promo-banner{
+  display:block;position:relative;border-radius:var(--radius-lg);overflow:hidden;
+  aspect-ratio:1915/821;background:var(--img-desktop) center/cover no-repeat;
+  box-shadow:var(--card-shadow);transition:transform .2s;
+}
+.promo-banner:hover{transform:translateY(-3px);}
+@media(max-width:768px){
+  .promo-banner{aspect-ratio:1/1;background-image:var(--img-mobile) !important;border-radius:16px;}
+}
+
 /* ---------- Newsletter ---------- */
 .newsletter-card{
   position:relative;border-radius:24px;overflow:hidden;aspect-ratio:2.6/1;background:#111 center/cover no-repeat;
