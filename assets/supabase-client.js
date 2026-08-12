@@ -254,7 +254,7 @@ export function serviceCardHTML(s) {
         <div>
           <h3>${s.titulo}</h3>
           <p class="loc">${s.marca || ''}</p>
-          <div class="service-price">${precoTexto}</div>
+          ${sobOrcamento ? '' : `<div class="service-price">${precoTexto}</div>`}
         </div>
         <a href="${link}" class="btn btn-primary btn-sm btn-block">${botaoTexto}</a>
       </div>
