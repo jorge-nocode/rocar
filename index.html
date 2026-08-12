@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css?v=19">
+<link rel="stylesheet" href="assets/style.css?v=20">
 </head>
 <body>
 
@@ -121,6 +121,30 @@
       </div>
       <div class="grid-4" id="servicos-destaque">
         <!-- preenchido via JS -->
+      </div>
+    </div>
+  </section>
+
+  <section class="section-tight" style="background:var(--bg-alt);">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">Loja</span>
+          <h2>Materiais e Peças</h2>
+          <p>Peças e componentes para reparo e rebobinamento.</p>
+        </div>
+        <a href="materiais.html" class="btn btn-outline">Ver Todos os Materiais</a>
+      </div>
+      <div class="carousel-wrap">
+        <button class="carousel-arrow carousel-prev" id="materiais-prev" aria-label="Anterior">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <div class="carousel-track" id="materiais-carousel">
+          <!-- preenchido via JS -->
+        </div>
+        <button class="carousel-arrow carousel-next" id="materiais-next" aria-label="Próximo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
       </div>
     </div>
   </section>
@@ -351,12 +375,26 @@
 <script src="assets/site.js" type="module"></script>
 <script src="assets/chatbot.js" type="module"></script>
 <script type="module">
-  import { fetchServicos, serviceCardHTML } from './assets/supabase-client.js';
+  import { fetchServicos, serviceCardHTML, filtrarMateriais, materialCardHTML } from './assets/supabase-client.js';
   fetchServicos({ destaque: true, limit: 4 }).then(lista => {
     const el = document.getElementById('servicos-destaque');
     if (!lista.length) { el.innerHTML = '<p class="muted">Em breve, novos serviços cadastrados.</p>'; return; }
     el.innerHTML = lista.map(serviceCardHTML).join('');
   });
+
+  (function(){
+    const track = document.getElementById('materiais-carousel');
+    if (!track) return;
+    const materiais = filtrarMateriais();
+    if (!materiais.length) { track.innerHTML = '<p class="muted">Em breve, novos materiais cadastrados.</p>'; return; }
+    track.innerHTML = materiais.map(materialCardHTML).join('');
+
+    const prev = document.getElementById('materiais-prev');
+    const next = document.getElementById('materiais-next');
+    const passo = () => (track.querySelector('.service-card')?.offsetWidth || 240) + 20;
+    prev.addEventListener('click', () => track.scrollBy({ left: -passo(), behavior: 'smooth' }));
+    next.addEventListener('click', () => track.scrollBy({ left: passo(), behavior: 'smooth' }));
+  })();
 </script>
 <script>
   (function(){
