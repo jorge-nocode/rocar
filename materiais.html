@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css?v=17">
+<link rel="stylesheet" href="assets/style.css?v=18">
 </head>
 <body>
 
@@ -67,18 +67,72 @@
       <div>
         <span class="eyebrow">Peças e Materiais</span>
         <h2>Materiais para Rebobinamento e Reparo</h2>
-        <p>Trabalhamos com peças e materiais de qualidade para o conserto do seu equipamento. Consulte disponibilidade e preço pelo WhatsApp.</p>
+        <p>Trabalhamos com peças e materiais de qualidade para o conserto do seu equipamento.</p>
       </div>
     </div>
 
-    <div class="grid-4" id="lista-materiais"><!-- preenchido via JS --></div>
+    <div class="shop-layout">
+      <aside class="shop-sidebar">
+        <div class="shop-filter-group">
+          <div class="shop-filter-title">Categorias</div>
+          <div class="shop-cat-list" id="filtro-categorias">
+            <button type="button" data-categoria="" class="active">Todos</button>
+          </div>
+        </div>
+
+        <div class="shop-filter-group">
+          <div class="shop-filter-title">Aplicação</div>
+          <select id="filtro-aplicacao" class="shop-select">
+            <option value="">Todas</option>
+            <option value="motores">Motores</option>
+            <option value="bombas">Bombas</option>
+            <option value="ferramentas">Ferramentas</option>
+            <option value="geral">Uso Geral</option>
+          </select>
+        </div>
+
+        <div class="shop-filter-group">
+          <div class="shop-filter-title">Buscar por Nome</div>
+          <input type="text" id="filtro-busca" class="shop-input" placeholder="Ex: capacitor, rolamento, cabo...">
+        </div>
+
+        <div class="shop-filter-group">
+          <div class="shop-filter-title">Código do Produto</div>
+          <input type="text" id="filtro-codigo" class="shop-input" placeholder="Ex: MAT-001">
+        </div>
+
+        <div class="shop-filter-group">
+          <div class="shop-filter-title">Filtrar por Preço</div>
+          <input type="range" id="filtro-preco" class="shop-range" min="10" max="100" value="100" step="5">
+          <div class="shop-range-label">R$10 — <span id="filtro-preco-label">R$100</span></div>
+        </div>
+
+        <div class="shop-filter-group">
+          <button type="button" id="limpar-filtros" class="btn btn-black btn-sm btn-block">Limpar Filtros</button>
+        </div>
+      </aside>
+
+      <div>
+        <div class="shop-toolbar">
+          <span class="shop-count" id="contador-materiais">materiais encontrados</span>
+          <select id="ordenar-materiais" class="shop-select" style="width:auto;">
+            <option value="padrao">Ordenar por: Padrão</option>
+            <option value="menor-preco">Menor Preço</option>
+            <option value="maior-preco">Maior Preço</option>
+            <option value="nome">Nome A-Z</option>
+          </select>
+        </div>
+        <div class="grid-4" id="lista-materiais"><!-- preenchido via JS --></div>
+        <p class="muted text-center" id="materiais-vazio" style="display:none;margin-top:30px;">Nenhum material encontrado com esse filtro. Fale com a gente no WhatsApp mesmo assim — talvez a gente tenha em estoque!</p>
+      </div>
+    </div>
   </div>
 
   <section class="section-tight" style="background:var(--bg-alt);margin-top:50px;">
     <div class="container text-center">
       <h2>Não achou o material que precisa?</h2>
       <p class="muted">Trabalhamos com fornecedores diversos e conseguimos praticamente qualquer peça para motores, bombas e ferramentas. Manda uma mensagem que a gente confirma.</p>
-      <a href="https://wa.me/551134353809?text=Ol%C3%A1!%20Preciso%20de%20uma%20pe%C3%A7a%20ou%20material.%20Pode%20me%20ajudar%3F" target="_blank" class="btn btn-whats">Chamar no WhatsApp</a>
+      <a href="https://wa.me/551134353809?text=Ol%C3%A1!%20Preciso%20de%20uma%20pe%C3%A7a%20ou%20material.%20Pode%20me%20ajudar%3F" target="_blank" class="btn btn-black">Chamar no WhatsApp</a>
     </div>
   </section>
 </main>
@@ -132,8 +186,82 @@
 <script src="assets/site.js" type="module"></script>
 <script src="assets/chatbot.js" type="module"></script>
 <script type="module">
-  import { MATERIAIS_EXEMPLO, materialCardHTML } from './assets/supabase-client.js';
-  document.getElementById('lista-materiais').innerHTML = MATERIAIS_EXEMPLO.map(materialCardHTML).join('');
+  import { MATERIAIS_EXEMPLO, LABELS_CATEGORIA_MATERIAL, filtrarMateriais, materialCardHTML } from './assets/supabase-client.js';
+
+  const listaCategorias = document.getElementById('filtro-categorias');
+  const filtroAplicacao = document.getElementById('filtro-aplicacao');
+  const filtroBusca = document.getElementById('filtro-busca');
+  const filtroCodigo = document.getElementById('filtro-codigo');
+  const filtroPreco = document.getElementById('filtro-preco');
+  const filtroPrecoLabel = document.getElementById('filtro-preco-label');
+  const ordenarSelect = document.getElementById('ordenar-materiais');
+  const lista = document.getElementById('lista-materiais');
+  const vazio = document.getElementById('materiais-vazio');
+  const contador = document.getElementById('contador-materiais');
+  const limparBtn = document.getElementById('limpar-filtros');
+
+  let categoriaAtual = '';
+
+  // Monta a lista de categorias a partir dos dados
+  const precoMaximo = Math.max(...MATERIAIS_EXEMPLO.map(m => m.preco));
+  filtroPreco.max = Math.ceil(precoMaximo / 5) * 5;
+  filtroPreco.value = filtroPreco.max;
+  filtroPrecoLabel.textContent = `R$${filtroPreco.max}`;
+
+  const categoriasUnicas = [...new Set(MATERIAIS_EXEMPLO.map(m => m.categoria))];
+  categoriasUnicas.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.dataset.categoria = cat;
+    btn.textContent = LABELS_CATEGORIA_MATERIAL[cat] || cat;
+    listaCategorias.appendChild(btn);
+  });
+
+  function render() {
+    const dados = filtrarMateriais({
+      categoria: categoriaAtual || undefined,
+      aplicacao: filtroAplicacao.value || undefined,
+      busca: filtroBusca.value || undefined,
+      codigo: filtroCodigo.value || undefined,
+      precoMax: Number(filtroPreco.value),
+      ordenar: ordenarSelect.value !== 'padrao' ? ordenarSelect.value : undefined
+    });
+    lista.innerHTML = dados.map(materialCardHTML).join('');
+    vazio.style.display = dados.length ? 'none' : 'block';
+    contador.textContent = `${dados.length} material${dados.length === 1 ? '' : 'is'} encontrado${dados.length === 1 ? '' : 's'}`;
+  }
+
+  listaCategorias.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    categoriaAtual = btn.dataset.categoria;
+    listaCategorias.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
+    render();
+  });
+
+  filtroAplicacao.addEventListener('change', render);
+  filtroCodigo.addEventListener('input', render);
+  ordenarSelect.addEventListener('change', render);
+  filtroPreco.addEventListener('input', () => {
+    filtroPrecoLabel.textContent = `R$${filtroPreco.value}`;
+    render();
+  });
+  let t;
+  filtroBusca.addEventListener('input', () => { clearTimeout(t); t = setTimeout(render, 250); });
+
+  limparBtn.addEventListener('click', () => {
+    categoriaAtual = '';
+    listaCategorias.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.categoria === ''));
+    filtroAplicacao.value = '';
+    filtroBusca.value = '';
+    filtroCodigo.value = '';
+    filtroPreco.value = filtroPreco.max;
+    filtroPrecoLabel.textContent = `R$${filtroPreco.max}`;
+    ordenarSelect.value = 'padrao';
+    render();
+  });
+
+  render();
 </script>
 </body>
 </html>

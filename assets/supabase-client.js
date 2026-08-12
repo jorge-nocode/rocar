@@ -359,83 +359,153 @@ const ICONE_ROLAMENTO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentCol
 const ICONE_CABO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6v3a5 5 0 0 0 5 5h6a5 5 0 0 1 5 5v1"/><path d="M4 4v4M8 4v4"/></svg>';
 const ICONE_INDUZIDO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="20" rx="2"/><path d="M5 6h4M15 6h4M5 12h4M15 12h4M5 18h4M15 18h4"/></svg>';
 
+export const LABELS_CATEGORIA_MATERIAL = {
+  'isolacao': 'Isolação',
+  'fios-de-cobre': 'Fios de Cobre',
+  'selos-mecanicos': 'Selos Mecânicos',
+  'centrifugas': 'Centrífugas',
+  'pecas-motor': 'Peças de Motor',
+  'capacitores': 'Capacitores',
+  'rolamentos': 'Rolamentos',
+  'cabos': 'Cabos',
+  'induzidos': 'Induzidos'
+};
+
+export const LABELS_APLICACAO_MATERIAL = {
+  'motores': 'Motores',
+  'bombas': 'Bombas',
+  'ferramentas': 'Ferramentas',
+  'geral': 'Uso Geral'
+};
+
 export const MATERIAIS_EXEMPLO = [
   {
     codigo: 'MAT-001',
     titulo: 'Isolação Branca para Motor',
     descricao: 'Fita e manta isolante branca para bobinagem de motores elétricos monofásicos e trifásicos.',
-    icone: ICONE_ISOLACAO
+    icone: ICONE_ISOLACAO,
+    categoria: 'isolacao',
+    aplicacao: 'motores',
+    preco: 35
   },
   {
     codigo: 'MAT-002',
     titulo: 'Carretéis de Fio de Cobre',
     descricao: 'Diversas bitolas de fio de cobre esmaltado disponíveis para rebobinamento.',
-    icone: ICONE_CARRETEL
+    icone: ICONE_CARRETEL,
+    categoria: 'fios-de-cobre',
+    aplicacao: 'motores',
+    preco: 55
   },
   {
     codigo: 'MAT-003',
     titulo: 'Selo Mecânico',
     descricao: 'Selos mecânicos para bombas d\'água e motores com vedação líquida.',
-    icone: ICONE_SELO
+    icone: ICONE_SELO,
+    categoria: 'selos-mecanicos',
+    aplicacao: 'bombas',
+    preco: 40
   },
   {
     codigo: 'MAT-004',
     titulo: 'Centrífuga de Motor',
     descricao: 'Peça de centrífuga/chave centrífuga para partida de motores monofásicos.',
-    icone: ICONE_CENTRIFUGA
+    icone: ICONE_CENTRIFUGA,
+    categoria: 'centrifugas',
+    aplicacao: 'motores',
+    preco: 65
   },
   {
     codigo: 'MAT-005',
     titulo: 'Peças para Motor Trifásico',
     descricao: 'Rolamentos, tampas, eixos e demais componentes para motores trifásicos.',
-    icone: ICONE_ENGRENAGEM
+    icone: ICONE_ENGRENAGEM,
+    categoria: 'pecas-motor',
+    aplicacao: 'motores',
+    preco: 85
   },
   {
     codigo: 'MAT-006',
     titulo: 'Peças para Motor Monofásico',
     descricao: 'Capacitor, chave centrífuga, rolamentos e outros componentes para motores monofásicos.',
-    icone: ICONE_ENGRENAGEM
+    icone: ICONE_ENGRENAGEM,
+    categoria: 'pecas-motor',
+    aplicacao: 'motores',
+    preco: 75
   },
   {
     codigo: 'MAT-007',
     titulo: 'Capacitores',
     descricao: 'Capacitores de partida e permanentes em diversas capacitâncias.',
-    icone: ICONE_CAPACITOR
+    icone: ICONE_CAPACITOR,
+    categoria: 'capacitores',
+    aplicacao: 'motores',
+    preco: 22
   },
   {
     codigo: 'MAT-008',
     titulo: 'Rolamentos',
     descricao: 'Rolamentos em diversos tamanhos para motores, bombas e ferramentas elétricas.',
-    icone: ICONE_ROLAMENTO
+    icone: ICONE_ROLAMENTO,
+    categoria: 'rolamentos',
+    aplicacao: 'geral',
+    preco: 28
   },
   {
     codigo: 'MAT-009',
     titulo: 'Cabo para Ferramenta Elétrica',
     descricao: 'Cabos de força para furadeiras, serras, esmerilhadeiras e ferramentas em geral.',
-    icone: ICONE_CABO
+    icone: ICONE_CABO,
+    categoria: 'cabos',
+    aplicacao: 'ferramentas',
+    preco: 18
   },
   {
     codigo: 'MAT-010',
     titulo: 'Induzidos',
     descricao: 'Induzidos para furadeiras, serras mármore e outras ferramentas elétricas.',
-    icone: ICONE_INDUZIDO
+    icone: ICONE_INDUZIDO,
+    categoria: 'induzidos',
+    aplicacao: 'ferramentas',
+    preco: 95
   }
 ];
 
+export function filtrarMateriais({ categoria, aplicacao, busca, codigo, precoMax, ordenar } = {}) {
+  let lista = [...MATERIAIS_EXEMPLO];
+  if (categoria) lista = lista.filter(m => m.categoria === categoria);
+  if (aplicacao) lista = lista.filter(m => m.aplicacao === aplicacao);
+  if (codigo) lista = lista.filter(m => m.codigo.toLowerCase().includes(codigo.toLowerCase()));
+  if (busca) {
+    const b = busca.toLowerCase();
+    lista = lista.filter(m => m.titulo.toLowerCase().includes(b));
+  }
+  if (precoMax) lista = lista.filter(m => m.preco <= precoMax);
+
+  if (ordenar === 'menor-preco') lista.sort((a, b) => a.preco - b.preco);
+  else if (ordenar === 'maior-preco') lista.sort((a, b) => b.preco - a.preco);
+  else if (ordenar === 'nome') lista.sort((a, b) => a.titulo.localeCompare(b.titulo, 'pt-BR'));
+
+  return lista;
+}
+
 export function materialCardHTML(m) {
-  const msg = `Olá! Tenho interesse em: ${m.titulo}. Vocês têm disponível?`;
+  const msg = `Olá! Quero comprar: ${m.titulo} (${m.codigo}). Ainda tem disponível?`;
+  const parcela = (m.preco / 3).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   return `
   <article class="service-card">
     <div class="service-photo material-photo">
-      <span class="badge badge-red">Material</span>
+      <span class="badge badge-red">${LABELS_CATEGORIA_MATERIAL[m.categoria] || 'Material'}</span>
       <div class="material-icon">${m.icone}</div>
     </div>
     <div class="service-body">
       <div>
         <h3>${m.titulo}</h3>
         <p class="loc">${m.descricao}</p>
+        <div class="service-price"><span class="from">A partir de</span>${formatBRL(m.preco)}</div>
+        <p class="parcela-info">ou 3x de ${parcela} sem juros</p>
       </div>
-      <a href="${whatsappLink(msg)}" target="_blank" class="btn btn-whats btn-sm btn-block">Consultar no WhatsApp</a>
+      <a href="${whatsappLink(msg)}" target="_blank" class="btn btn-whats btn-sm btn-block">Comprar</a>
     </div>
   </article>`;
 }

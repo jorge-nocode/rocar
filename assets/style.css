@@ -224,6 +224,45 @@ nav.main-nav a:hover,nav.main-nav a.active{color:var(--red);border-bottom-color:
 .material-photo{display:flex;align-items:center;justify-content:center;}
 .material-icon{width:44%;max-width:80px;color:var(--red);opacity:.85;}
 .material-icon svg{width:100%;height:100%;}
+.parcela-info{font-size:.72rem;color:var(--text-muted);margin:.2em 0 0;}
+
+/* ---------- Botão preto (ações que não são "Comprar") ---------- */
+.btn-black{background:var(--black);color:#fff;box-shadow:0 10px 24px rgba(0,0,0,.18);}
+.btn-black:hover{background:#000;transform:translateY(-2px);box-shadow:0 14px 30px rgba(0,0,0,.28);}
+
+/* ---------- Loja de Materiais (estilo QRV) ---------- */
+.shop-layout{display:grid;grid-template-columns:250px 1fr;gap:36px;align-items:start;}
+.shop-sidebar{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-md);padding:22px 20px;position:sticky;top:90px;}
+.shop-filter-group{margin-bottom:24px;}
+.shop-filter-group:last-child{margin-bottom:0;}
+.shop-filter-title{font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.shop-cat-list{display:flex;flex-direction:column;gap:2px;}
+.shop-cat-list button{
+  background:none;border:none;text-align:left;padding:7px 4px;font-size:.86rem;color:var(--text-muted);
+  cursor:pointer;border-radius:6px;font-family:inherit;
+}
+.shop-cat-list button:hover{color:var(--black);background:var(--bg-alt);}
+.shop-cat-list button.active{color:var(--black);font-weight:800;}
+.shop-select{
+  width:100%;padding:10px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);
+  background:var(--bg-alt);color:var(--text);font-size:.85rem;
+}
+.shop-input{
+  width:100%;padding:10px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);
+  background:var(--bg-alt);color:var(--text);font-size:.85rem;
+}
+.shop-range{width:100%;accent-color:var(--red);margin-top:6px;}
+.shop-range-label{font-size:.78rem;color:var(--text-muted);margin-top:6px;}
+.shop-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;gap:16px;flex-wrap:wrap;}
+.shop-count{font-size:.88rem;color:var(--text-muted);}
+.shop-layout .grid-4{grid-template-columns:repeat(3,1fr);}
+@media(max-width:1080px){.shop-layout .grid-4{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:900px){
+  .shop-layout{grid-template-columns:1fr;}
+  .shop-sidebar{position:static;}
+  .shop-layout .grid-4{grid-template-columns:repeat(3,1fr);}
+}
+@media(max-width:560px){.shop-layout .grid-4{grid-template-columns:repeat(2,1fr);}}
 .service-photo img{width:100%;height:100%;object-fit:cover;}
 .service-photo .badge{position:absolute;top:12px;left:12px;}
 .service-body{padding:18px 18px 20px;display:flex;flex-direction:column;flex:1;justify-content:space-between;}
