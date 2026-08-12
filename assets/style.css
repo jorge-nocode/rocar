@@ -410,6 +410,41 @@ footer{background:var(--footer-bg);color:rgba(255,255,255,.8);padding:56px 0 24p
 .pay-icons{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
 .pay-icons svg{height:22px;width:auto;}
 
+/* ---------- Timeline (Quem Somos) ---------- */
+.timeline{position:relative;max-width:900px;margin:0 auto;padding-left:0;}
+.timeline::before{
+  content:"";position:absolute;left:18px;top:8px;bottom:8px;width:2px;
+  background:linear-gradient(180deg,var(--red),var(--border));
+}
+.timeline-item{position:relative;padding:0 0 34px 52px;}
+.timeline-item:last-child{padding-bottom:0;}
+.timeline-dot{
+  position:absolute;left:8px;top:2px;width:22px;height:22px;border-radius:50%;
+  background:var(--red);border:4px solid #fff;box-shadow:0 0 0 2px var(--red);
+}
+.timeline-item .era{display:block;font-size:.7rem;font-weight:800;color:var(--red);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
+.timeline-item h4{margin:0 0 .3em;font-size:1.05rem;}
+.timeline-item p{margin:0;color:var(--text-muted);font-size:.9rem;}
+@media(max-width:640px){
+  .timeline-item{padding-left:42px;}
+  .timeline::before{left:12px;}
+  .timeline-dot{left:2px;width:18px;height:18px;}
+}
+
+/* ---------- Pillars (3 pilares institucionais) ---------- */
+.pillars-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;}
+.pillar-card{
+  background:var(--panel);border-radius:var(--radius-md);box-shadow:var(--card-shadow);
+  padding:28px 24px;text-align:left;
+}
+.pillar-card .pillar-icon{
+  width:48px;height:48px;border-radius:12px;background:var(--red);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin-bottom:16px;
+}
+.pillar-card h4{font-size:1.05rem;margin-bottom:.4em;}
+.pillar-card p{font-size:.88rem;color:var(--text-muted);margin:0;}
+@media(max-width:900px){.pillars-grid{grid-template-columns:1fr;}}
+
 /* ---------- Misc ---------- */
 .divider{height:1px;background:var(--border);margin:40px 0;}
 .faq-item{border-bottom:1px solid var(--border);padding:18px 0;}
