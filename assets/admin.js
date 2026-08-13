@@ -396,44 +396,61 @@ async function handleConfigSubmit(e) {
 // qualquer pessoa logada no painel, em qualquer computador, consegue
 // usar o botão "Gerar com IA" sem precisar configurar nada localmente.
 // ---------------------------------------------------------------
-// Endpoint estável usado para todas as chamadas do "Gerar com IA".
-const GEMINI_URL_BASE = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+// Modelos a tentar, em ordem. O 404 acontece quando o nome do modelo
+// não existe (ou não está mais disponível) para a versão v1beta da
+// API — por isso tentamos o próximo da lista automaticamente.
+const GEMINI_MODEL_CANDIDATES = ['gemini-2.0-flash', 'gemini-1.5-flash-latest'];
 
-// Chama o Gemini pedindo resposta em JSON puro (com responseSchema,
-// que força o modelo a devolver exatamente os campos pedidos mesmo
-// quando o usuário digita pouquíssima informação) e devolve o objeto
-// já parseado. Lança erro se não houver chave configurada, se a API
-// falhar ou se a resposta não for um JSON válido.
-async function gerarJSONComGemini(prompt, responseSchema) {
+// Instrução de formato enviada via systemInstruction (separada do
+// texto do usuário), pedindo explicitamente um JSON puro no formato
+// esperado pelos formulários de Materiais e Serviços.
+const GEMINI_SYSTEM_INSTRUCTION = `Você é um assistente de e-commerce de materiais elétricos.
+O usuário enviará informações brutas de um produto ou serviço.
+Sua resposta DEVE SER EXCLUSIVAMENTE UM OBJETO JSON VÁLIDO no seguinte formato exato, sem marcações markdown de código (sem \`\`\`json), sem explicações:
+{
+  "nome": "Nome do Produto",
+  "titulo": "Título para Serviços",
+  "categoria": "Categoria apropriada",
+  "aplicacao": "Aplicação técnica",
+  "marca": "Marca se houver",
+  "preco": 35.00,
+  "descricao": "Descrição comercial completa"
+}`;
+
+// Chama o Gemini pedindo resposta em JSON e devolve o objeto já
+// parseado. Lança erro se não houver chave configurada, se a API
+// falhar em todos os modelos ou se a resposta não for um JSON válido.
+async function gerarJSONComGemini(prompt) {
   const key = (await fetchConfig('chatbot_gemini_key') || '').trim();
   if (!key) {
     throw new Error('Nenhuma chave do Gemini configurada. Salve a chave na aba "Configurações" (ela vale para todos os admins).');
   }
 
-  const resp = await fetch(`${GEMINI_URL_BASE}?key=${encodeURIComponent(key)}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.2,
-        maxOutputTokens: 1000,
-        responseMimeType: 'application/json',
-        ...(responseSchema ? { responseSchema } : {})
-      }
-    })
-  });
+  let resp, data, lastErro;
+  for (const modelo of GEMINI_MODEL_CANDIDATES) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${encodeURIComponent(key)}`;
+    resp = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        systemInstruction: { parts: [{ text: GEMINI_SYSTEM_INSTRUCTION }] },
+        generationConfig: { temperature: 0.2 }
+      })
+    });
 
-  if (!resp.ok) throw new Error(`Gemini respondeu ${resp.status}`);
+    if (resp.ok) { data = await resp.json(); lastErro = null; break; }
 
-  const data = await resp.json();
+    lastErro = new Error(`Gemini respondeu ${resp.status} para o modelo "${modelo}"`);
+    if (resp.status !== 404) break;
+  }
+
+  if (lastErro) throw lastErro;
+
   const candidato = data?.candidates?.[0];
   const textoBruto = (candidato?.content?.parts || [])
     .map(p => p.text || '').join('').trim();
 
-  if (candidato?.finishReason === 'MAX_TOKENS') {
-    throw new Error('A resposta da IA foi cortada por limite de tamanho antes de terminar o JSON. Clique em "Gerar com IA" novamente.');
-  }
   if (!textoBruto) {
     throw new Error('Resposta vazia da IA.');
   }
@@ -478,28 +495,6 @@ function parseJSONDaIA(textoBruto) {
   }
 }
 
-// responseSchema exigido pela API do Gemini para forçar a resposta a
-// vir sempre no formato certo, mesmo com prompts muito curtos como
-// "Capacitor 35,00". Um único schema com todos os campos possíveis
-// (usado tanto para Materiais quanto para Serviços — cada tela só lê
-// as propriedades que usa). Só "descricao" é obrigatório, para não
-// arriscar a chamada inteira falhar quando algum outro campo não
-// puder ser inferido com segurança pelo texto colado.
-const SCHEMA_IA = {
-  type: 'OBJECT',
-  properties: {
-    codigo: { type: 'STRING' },
-    nome: { type: 'STRING' },
-    titulo: { type: 'STRING' },
-    categoria: { type: 'STRING' },
-    aplicacao: { type: 'STRING' },
-    marca: { type: 'STRING' },
-    preco: { type: 'NUMBER' },
-    descricao: { type: 'STRING' }
-  },
-  required: ['descricao']
-};
-
 async function handleGerarMaterialIA() {
   const f = els.materialForm;
   const raw = els.materialRaw?.value?.trim();
@@ -539,7 +534,7 @@ ${raw}
 """`;
 
   try {
-    const json = await gerarJSONComGemini(prompt, SCHEMA_IA);
+    const json = await gerarJSONComGemini(prompt);
 
     if (json.codigo) f.codigo.value = json.codigo;
     if (json.titulo || json.nome) f.titulo.value = json.titulo || json.nome;
@@ -598,7 +593,7 @@ ${raw}
 """`;
 
   try {
-    const json = await gerarJSONComGemini(prompt, SCHEMA_IA);
+    const json = await gerarJSONComGemini(prompt);
 
     if (json.codigo) f.codigo.value = json.codigo;
     if (json.titulo || json.nome) f.titulo.value = json.titulo || json.nome;
