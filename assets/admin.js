@@ -32,6 +32,8 @@ const els = {
   materialFeedback: document.querySelector('#material-feedback'),
   materialFotosInput: document.querySelector('#material-fotos'),
   listaCategoriasMaterial: document.querySelector('#lista-categorias-material'),
+  materialGerarDescBtn: document.querySelector('#material-gerar-desc-btn'),
+  materialDescFeedback: document.querySelector('#material-desc-feedback'),
 };
 
 if (!supabase) {
@@ -76,6 +78,10 @@ async function initAdmin() {
 
   if (els.materialForm) {
     els.materialForm.addEventListener('submit', handleMaterialSubmit);
+  }
+
+  if (els.materialGerarDescBtn) {
+    els.materialGerarDescBtn.addEventListener('click', handleGerarDescricaoIA);
   }
 
   if (els.listaCategoriasMaterial) {
@@ -367,5 +373,70 @@ async function handleConfigSubmit(e) {
   } else {
     els.configFeedback.textContent = 'Erro ao salvar: ' + (error?.message || 'tente novamente.');
     els.configFeedback.className = 'form-feedback err';
+  }
+}
+
+// ---------------------------------------------------------------
+// Geração de descrição de material com IA (Google Gemini). Usa a
+// mesma chave configurada na aba "Configurações" (tabela site_config,
+// chave 'chatbot_gemini_key') — a mesma estrutura de conexão já usada
+// pelo chat "Técnico Rocar".
+// ---------------------------------------------------------------
+const GEMINI_MODEL = 'gemini-2.5-flash';
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+
+async function handleGerarDescricaoIA() {
+  const nome = els.materialForm?.titulo?.value?.trim();
+  const feedback = els.materialDescFeedback;
+  if (!nome) {
+    feedback.textContent = 'Preencha o Nome do produto primeiro.';
+    feedback.className = 'form-feedback err';
+    return;
+  }
+
+  const key = await fetchConfig('chatbot_gemini_key');
+  if (!key) {
+    feedback.textContent = 'Configure a chave da API do Gemini na aba "Configurações" primeiro.';
+    feedback.className = 'form-feedback err';
+    return;
+  }
+
+  const btn = els.materialGerarDescBtn;
+  const textoOriginal = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Gerando...';
+  feedback.textContent = '';
+  feedback.className = 'form-feedback';
+
+  const prompt = `Aja como um especialista em vendas técnicas e crie uma descrição vendedora, direta e profissional com cerca de 50 palavras para o seguinte produto: ${nome}`;
+
+  try {
+    const resp = await fetch(`${GEMINI_URL}?key=${encodeURIComponent(key)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.7, maxOutputTokens: 220 }
+      })
+    });
+
+    if (!resp.ok) throw new Error(`Gemini respondeu ${resp.status}`);
+
+    const data = await resp.json();
+    const texto = (data?.candidates?.[0]?.content?.parts || [])
+      .map(p => p.text || '').join('').trim();
+
+    if (!texto) throw new Error('Resposta vazia da IA.');
+
+    els.materialForm.descricao.value = texto;
+    feedback.textContent = 'Descrição gerada com sucesso!';
+    feedback.className = 'form-feedback ok';
+  } catch (err) {
+    console.error(err);
+    feedback.textContent = 'Erro ao gerar descrição: ' + err.message;
+    feedback.className = 'form-feedback err';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = textoOriginal;
   }
 }

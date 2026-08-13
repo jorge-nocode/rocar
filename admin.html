@@ -139,7 +139,14 @@
               </select>
             </div>
           </div>
-          <div class="field"><label>Descrição</label><textarea name="descricao"></textarea></div>
+          <div class="field">
+            <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+              <span>Descrição</span>
+              <button type="button" id="material-gerar-desc-btn" class="btn btn-outline btn-sm" style="text-transform:none;letter-spacing:0;padding:6px 14px;font-size:.72rem;">✨ Gerar com IA</button>
+            </label>
+            <textarea name="descricao"></textarea>
+            <p id="material-desc-feedback" class="form-feedback" style="margin-top:6px;"></p>
+          </div>
           <div class="form-row">
             <div class="field"><label>Preço (a partir de)</label><input type="number" step="0.01" name="preco" required></div>
             <div class="field">
