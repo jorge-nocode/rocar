@@ -3,8 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fale Conosco | Elétrica Rocar</title>
-<meta name="description" content="Entre em contato com a Elétrica Rocar em Guarulhos - SP. WhatsApp, telefone, e-mail e endereço.">
+<title id="page-title">Material | Elétrica Rocar</title>
 <link rel="icon" href="assets/favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -35,10 +34,10 @@
     <nav class="main-nav">
       <a href="index.html">Início</a>
       <a href="servicos.html">Serviços</a>
-      <a href="materiais.html">Materiais</a>
+      <a href="materiais.html" class="active">Materiais</a>
       <a href="orcamento.html">Orçamento</a>
       <a href="quem-somos.html">Quem Somos</a>
-      <a href="contato.html" class="active">Contato</a>
+      <a href="contato.html">Contato</a>
     </nav>
     <div class="header-actions">
       <button class="hamburger" aria-label="Abrir menu"><span></span><span></span><span></span></button>
@@ -62,64 +61,48 @@
 
 <main>
   <div class="container">
-    <div class="breadcrumb"><a href="index.html">Início</a> / Contato</div>
-    <div class="section-head" style="flex-direction:column;align-items:flex-start;">
-      <span class="eyebrow">Fale Conosco</span>
-      <h2>Estamos aqui para ajudar</h2>
+    <div class="breadcrumb">
+      <a href="index.html">Início</a> / <a href="materiais.html">Materiais</a> / <span id="bc-titulo">...</span>
     </div>
 
-    <div class="contact-grid">
+    <div id="material-conteudo" class="detail-grid">
       <div>
-        <div class="contact-card">
-          <h4>📍 Endereço</h4>
-          <p>Rua Soldado Francisco de Almeida, 40 — Vila Yaya<br>Guarulhos - SP · CEP 07060-021</p>
-        </div>
-        <div class="contact-card">
-          <h4>🕒 Horário de Atendimento</h4>
-          <p>Segunda a Domingo · 09h às 22h</p>
-        </div>
-        <div class="contact-card">
-          <h4>📞 Telefones</h4>
-          <p><a href="tel:+551134353809">(11) 3435-3809</a><br>
-             <a href="https://wa.me/551134353809" target="_blank">(11) 3435-3809 — WhatsApp</a></p>
-        </div>
-        <div class="contact-card">
-          <h4>✉️ E-mail</h4>
-          <p><a href="mailto:eletricarocar@gmail.com">eletricarocar@gmail.com</a></p>
+        <div class="gallery-main produto" id="gallery-main">
+          <img id="foto-principal" src="" alt="" style="display:none;">
+          <div id="icone-principal" class="material-photo" style="width:100%;height:100%;"></div>
         </div>
       </div>
 
       <div>
-        <div class="form-card">
-          <h3 style="margin-bottom:18px;">Envie uma mensagem</h3>
-          <form id="form-contato">
-            <div class="field">
-              <label for="nome">Nome</label>
-              <input type="text" id="nome" name="nome" required>
-            </div>
-            <div class="form-row">
-              <div class="field">
-                <label for="email">E-mail</label>
-                <input type="email" id="email" name="email">
-              </div>
-              <div class="field">
-                <label for="telefone">Telefone</label>
-                <input type="text" id="telefone" name="telefone">
-              </div>
-            </div>
-            <div class="field">
-              <label for="mensagem">Mensagem</label>
-              <textarea id="mensagem" name="mensagem" required></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary btn-block">Enviar Mensagem</button>
-          </form>
+        <span class="badge badge-outline" id="detail-categoria">Categoria</span>
+        <h1 class="detail-title" id="detail-titulo">Carregando...</h1>
+        <p class="muted" id="detail-codigo"></p>
+
+        <div class="detail-price" id="detail-preco"></div>
+        <p class="parcela-info" id="detail-parcela" style="font-size:.9rem;"></p>
+
+        <div style="display:flex;gap:14px;flex-wrap:wrap;margin:20px 0;">
+          <a href="#" id="btn-whats" target="_blank" class="btn btn-whats" style="flex:1;min-width:220px;justify-content:center;">Comprar pelo WhatsApp</a>
         </div>
 
-        <iframe class="map-frame" style="margin-top:24px;" loading="lazy"
-          src="https://www.google.com/maps?q=Rua+Soldado+Francisco+de+Almeida,+40,+Vila+Yaya,+Guarulhos+-+SP&output=embed">
-        </iframe>
+        <div class="pay-icons" style="margin-bottom:20px;">
+          <span class="badge badge-outline">Pix</span>
+          <span class="badge badge-outline">Dinheiro</span>
+          <span class="badge badge-outline">Cartão</span>
+        </div>
+
+        <div class="detail-desc" id="detail-descricao"></div>
       </div>
     </div>
+
+    <p id="material-nao-encontrado" class="muted text-center" style="display:none;margin:60px 0;">
+      Material não encontrado. <a href="materiais.html">Voltar para a loja de materiais</a>.
+    </p>
+
+    <section class="section-tight" id="relacionados-section">
+      <div class="section-head"><h2>Você também pode gostar</h2></div>
+      <div class="grid-4" id="relacionados"></div>
+    </section>
   </div>
 </main>
 
@@ -171,6 +154,57 @@
 
 <script src="assets/site.js" type="module"></script>
 <script src="assets/chatbot.js" type="module"></script>
-<script src="assets/forms.js" type="module"></script>
+<script type="module">
+  import { fetchMaterialById, fetchMateriais, formatBRL, labelCategoria, LABELS_CATEGORIA_MATERIAL, whatsappLinkMaterial, materialCardHTML } from './assets/supabase-client.js';
+
+  const params = new URLSearchParams(location.search);
+  const id = params.get('id');
+
+  async function load() {
+    const material = await fetchMaterialById(id);
+
+    if (!material) {
+      document.getElementById('material-conteudo').style.display = 'none';
+      document.getElementById('relacionados-section').style.display = 'none';
+      document.getElementById('material-nao-encontrado').style.display = 'block';
+      return;
+    }
+
+    document.getElementById('page-title').textContent = material.titulo + ' | Elétrica Rocar';
+    document.getElementById('bc-titulo').textContent = material.titulo;
+    document.getElementById('detail-categoria').textContent = LABELS_CATEGORIA_MATERIAL[material.categoria] || material.categoria;
+    document.getElementById('detail-titulo').textContent = material.titulo;
+    document.getElementById('detail-codigo').textContent = 'Código: ' + material.codigo;
+
+    const precoEl = document.getElementById('detail-preco');
+    precoEl.innerHTML = `<span class="from">A partir de</span>${formatBRL(material.preco)}`;
+    const parcela = (material.preco / 3).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    document.getElementById('detail-parcela').textContent = `ou 3x de ${parcela} sem juros`;
+
+    const fotoImg = document.getElementById('foto-principal');
+    const iconeWrap = document.getElementById('icone-principal');
+    if (material.imagem_url) {
+      fotoImg.src = material.imagem_url;
+      fotoImg.alt = material.titulo;
+      fotoImg.style.display = 'block';
+      iconeWrap.style.display = 'none';
+      document.getElementById('gallery-main').style.background = '#fff';
+    } else {
+      iconeWrap.innerHTML = `<div class="material-icon" style="width:34%;max-width:140px;">${material.icone || ''}</div>`;
+    }
+
+    document.getElementById('btn-whats').href = whatsappLinkMaterial(material);
+    document.getElementById('detail-descricao').innerHTML = (material.descricao || 'Sem descrição adicional.')
+      .split('\n').map(p => p ? `<p>${p}</p>` : '').join('');
+
+    const relacionados = (await fetchMateriais({ categoria: material.categoria }))
+      .filter(m => m.id !== material.id).slice(0, 4);
+    document.getElementById('relacionados').innerHTML = relacionados.length
+      ? relacionados.map(materialCardHTML).join('')
+      : '<p class="muted">Sem outros materiais nessa categoria por enquanto.</p>';
+  }
+
+  load();
+</script>
 </body>
 </html>

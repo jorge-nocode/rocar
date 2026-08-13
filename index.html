@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css?v=24">
+<link rel="stylesheet" href="assets/style.css?v=25">
 </head>
 <body>
 
@@ -359,12 +359,12 @@
 <script src="assets/site.js" type="module"></script>
 <script src="assets/chatbot.js" type="module"></script>
 <script type="module">
-  import { filtrarMateriais, materialCardHTML } from './assets/supabase-client.js';
+  import { fetchMateriais, materialCardHTML } from './assets/supabase-client.js';
 
-  (function(){
+  (async function(){
     const track = document.getElementById('materiais-carousel');
     if (!track) return;
-    const materiais = filtrarMateriais();
+    const materiais = await fetchMateriais();
     if (!materiais.length) { track.innerHTML = '<p class="muted">Em breve, novos materiais cadastrados.</p>'; return; }
     track.innerHTML = materiais.map(materialCardHTML).join('');
 

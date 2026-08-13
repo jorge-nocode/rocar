@@ -78,6 +78,22 @@ create table if not exists public.newsletter (
 );
 
 -- ---------------------------------------------------------------
+-- Materiais / peças à venda (loja de materiais.html)
+-- ---------------------------------------------------------------
+create table if not exists public.materiais (
+  id uuid primary key default gen_random_uuid(),
+  codigo text unique not null,
+  titulo text not null,
+  categoria text not null,           -- slug livre, ex: isolacao | fios-de-cobre | microondas-seminovos ...
+  aplicacao text,                    -- motores | bombas | ferramentas | eletrodomesticos | geral
+  descricao text,
+  preco numeric not null,            -- preço "a partir de"
+  imagem_url text,                   -- URL pública da foto do produto
+  status text not null default 'ativo',  -- ativo | inativo
+  created_at timestamptz default now()
+);
+
+-- ---------------------------------------------------------------
 -- Configuração chave/valor (uso geral, ex: chave de API de chat)
 -- ---------------------------------------------------------------
 create table if not exists public.site_config (
@@ -94,6 +110,7 @@ alter table public.solicitacoes_orcamento enable row level security;
 alter table public.solicitacoes_empresa enable row level security;
 alter table public.newsletter enable row level security;
 alter table public.site_config enable row level security;
+alter table public.materiais enable row level security;
 
 -- >>> TROQUE pelo e-mail que você vai usar para logar no painel admin <<<
 -- (mesmo e-mail cadastrado em Supabase Authentication > Users)
@@ -149,6 +166,15 @@ create policy "admin gerencia config" on public.site_config
 create policy "publico le chave do chatbot" on public.site_config
   for select using (chave = 'chatbot_gemini_key');
 
+-- Leitura pública: só materiais ativos
+create policy "publico le materiais ativos" on public.materiais
+  for select using (status = 'ativo');
+
+-- Gestão total: só o e-mail autorizado
+create policy "admin gerencia materiais" on public.materiais
+  for all using (auth.jwt() ->> 'email' = 'eletricarocar@gmail.com')
+  with check (auth.jwt() ->> 'email' = 'eletricarocar@gmail.com');
+
 -- ===================================================================
 -- Storage: bucket de fotos dos serviços
 -- ===================================================================
@@ -164,3 +190,19 @@ create policy "admin upload fotos" on storage.objects
 
 create policy "admin remove fotos" on storage.objects
   for delete using (bucket_id = 'servicos-fotos' and auth.jwt() ->> 'email' = 'eletricarocar@gmail.com');
+
+-- ===================================================================
+-- Storage: bucket de fotos dos materiais/produtos
+-- ===================================================================
+insert into storage.buckets (id, name, public)
+values ('materiais-fotos', 'materiais-fotos', true)
+on conflict (id) do nothing;
+
+create policy "leitura publica fotos materiais" on storage.objects
+  for select using (bucket_id = 'materiais-fotos');
+
+create policy "admin upload fotos materiais" on storage.objects
+  for insert with check (bucket_id = 'materiais-fotos' and auth.jwt() ->> 'email' = 'eletricarocar@gmail.com');
+
+create policy "admin remove fotos materiais" on storage.objects
+  for delete using (bucket_id = 'materiais-fotos' and auth.jwt() ->> 'email' = 'eletricarocar@gmail.com');

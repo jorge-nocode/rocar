@@ -510,8 +510,29 @@ export const MATERIAIS_EXEMPLO = [
   }
 ];
 
-export function filtrarMateriais({ categoria, aplicacao, busca, codigo, precoMax, ordenar } = {}) {
-  let lista = [...MATERIAIS_EXEMPLO];
+const ICONE_GENERICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+
+export const MATERIAIS_BUCKET = 'materiais-fotos';
+
+// Normaliza um registro (vindo do Supabase ou do MATERIAIS_EXEMPLO local)
+// para um formato único usado pelos cartões e pela página de detalhe.
+function normalizarMaterial(m) {
+  return {
+    id: m.id || m.codigo,
+    codigo: m.codigo,
+    titulo: m.titulo,
+    categoria: m.categoria,
+    aplicacao: m.aplicacao || null,
+    descricao: m.descricao || '',
+    preco: m.preco,
+    imagem_url: m.imagem_url || m.foto || null,
+    icone: m.icone || null,
+    status: m.status || 'ativo'
+  };
+}
+
+function filtrarMateriaisLocal({ categoria, aplicacao, busca, codigo, precoMax, ordenar } = {}) {
+  let lista = MATERIAIS_EXEMPLO.map(normalizarMaterial);
   if (categoria) lista = lista.filter(m => m.categoria === categoria);
   if (aplicacao) lista = lista.filter(m => m.aplicacao === aplicacao);
   if (codigo) lista = lista.filter(m => m.codigo.toLowerCase().includes(codigo.toLowerCase()));
@@ -528,25 +549,69 @@ export function filtrarMateriais({ categoria, aplicacao, busca, codigo, precoMax
   return lista;
 }
 
+// ---------------------------------------------------------------
+// Busca de materiais/produtos — usa a tabela public.materiais quando
+// o Supabase está configurado; senão cai no MATERIAIS_EXEMPLO (offline).
+// ---------------------------------------------------------------
+export async function fetchMateriais({ categoria, aplicacao, busca, codigo, precoMax, ordenar, limit } = {}) {
+  if (!supabase) return filtrarMateriaisLocal({ categoria, aplicacao, busca, codigo, precoMax, ordenar }).slice(0, limit || undefined);
+
+  let query = supabase.from('materiais').select('*').eq('status', 'ativo');
+  if (categoria) query = query.eq('categoria', categoria);
+  if (aplicacao) query = query.eq('aplicacao', aplicacao);
+  if (codigo) query = query.ilike('codigo', `%${codigo}%`);
+  if (busca) query = query.ilike('titulo', `%${busca}%`);
+  if (precoMax) query = query.lte('preco', precoMax);
+
+  if (ordenar === 'menor-preco') query = query.order('preco', { ascending: true });
+  else if (ordenar === 'maior-preco') query = query.order('preco', { ascending: false });
+  else if (ordenar === 'nome') query = query.order('titulo', { ascending: true });
+  else query = query.order('created_at', { ascending: false });
+
+  if (limit) query = query.limit(limit);
+
+  const { data, error } = await query;
+  if (error) { console.error(error); return []; }
+  return (data || []).map(normalizarMaterial);
+}
+
+export async function fetchMaterialById(id) {
+  if (!id) return null;
+  if (!supabase) {
+    const item = MATERIAIS_EXEMPLO.find(m => m.codigo === id);
+    return item ? normalizarMaterial(item) : null;
+  }
+  let { data } = await supabase.from('materiais').select('*').eq('id', id).maybeSingle();
+  if (!data) {
+    ({ data } = await supabase.from('materiais').select('*').eq('codigo', id).maybeSingle());
+  }
+  return data ? normalizarMaterial(data) : null;
+}
+
+export function whatsappLinkMaterial(m) {
+  const msg = `Olá! Quero comprar: ${m.titulo} (${m.codigo}) - ${formatBRL(m.preco)}. Ainda tem disponível?`;
+  return whatsappLink(msg);
+}
+
 export function materialCardHTML(m) {
-  const msg = `Olá! Quero comprar: ${m.titulo} (${m.codigo}). Ainda tem disponível?`;
-  const parcela = (m.preco / 3).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  const foto = m.foto
-    ? `<img src="${m.foto}" alt="${m.titulo}" loading="lazy">`
-    : `<div class="material-icon">${m.icone}</div>`;
+  const link = `material.html?id=${encodeURIComponent(m.id || m.codigo)}`;
+  const foto = m.imagem_url
+    ? `<img src="${m.imagem_url}" alt="${m.titulo}" loading="lazy">`
+    : `<div class="material-icon">${m.icone || ICONE_GENERICO}</div>`;
   return `
   <article class="service-card">
-    <div class="service-photo material-photo${m.foto ? '' : ' sem-foto'}">
-      <span class="badge badge-red">${LABELS_CATEGORIA_MATERIAL[m.categoria] || 'Material'}</span>
-      ${foto}
-    </div>
-    <div class="service-body">
-      <div>
-        <h3>${m.titulo}</h3>
-        <div class="service-price"><span class="from">A partir de</span>${formatBRL(m.preco)}</div>
-        <p class="parcela-info">ou 3x de ${parcela} sem juros</p>
+    <a href="${link}">
+      <div class="service-photo material-photo${m.imagem_url ? '' : ' sem-foto'}">
+        <span class="badge badge-red">${LABELS_CATEGORIA_MATERIAL[m.categoria] || 'Material'}</span>
+        ${foto}
       </div>
-      <a href="${whatsappLink(msg)}" target="_blank" class="btn btn-whats btn-sm btn-block">Comprar</a>
-    </div>
+      <div class="service-body">
+        <div>
+          <h3>${m.titulo}</h3>
+          <div class="service-price"><span class="from">A partir de</span>${formatBRL(m.preco)}</div>
+        </div>
+        <a href="${link}" class="btn btn-primary btn-sm btn-block">Ver Detalhes</a>
+      </div>
+    </a>
   </article>`;
 }

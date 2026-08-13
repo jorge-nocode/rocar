@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css?v=24">
+<link rel="stylesheet" href="assets/style.css?v=25">
 </head>
 <body>
 
@@ -187,7 +187,7 @@
 <script src="assets/site.js" type="module"></script>
 <script src="assets/chatbot.js" type="module"></script>
 <script type="module">
-  import { MATERIAIS_EXEMPLO, LABELS_CATEGORIA_MATERIAL, filtrarMateriais, materialCardHTML } from './assets/supabase-client.js';
+  import { LABELS_CATEGORIA_MATERIAL, fetchMateriais, materialCardHTML } from './assets/supabase-client.js';
 
   const listaCategorias = document.getElementById('filtro-categorias');
   const filtroAplicacao = document.getElementById('filtro-aplicacao');
@@ -203,23 +203,25 @@
 
   let categoriaAtual = '';
 
-  // Monta a lista de categorias a partir dos dados
-  const precoMaximo = Math.max(...MATERIAIS_EXEMPLO.map(m => m.preco));
-  filtroPreco.max = Math.ceil(precoMaximo / 5) * 5;
-  filtroPreco.value = filtroPreco.max;
-  filtroPrecoLabel.textContent = `R$${filtroPreco.max}`;
+  async function montarCategorias() {
+    const todos = await fetchMateriais();
+    const precoMaximo = Math.max(1, ...todos.map(m => m.preco));
+    filtroPreco.max = Math.ceil(precoMaximo / 5) * 5;
+    filtroPreco.value = filtroPreco.max;
+    filtroPrecoLabel.textContent = `R$${filtroPreco.max}`;
 
-  const categoriasUnicas = [...new Set(MATERIAIS_EXEMPLO.map(m => m.categoria))];
-  categoriasUnicas.forEach(cat => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.dataset.categoria = cat;
-    btn.textContent = LABELS_CATEGORIA_MATERIAL[cat] || cat;
-    listaCategorias.appendChild(btn);
-  });
+    const categoriasUnicas = [...new Set(todos.map(m => m.categoria))];
+    categoriasUnicas.forEach(cat => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.dataset.categoria = cat;
+      btn.textContent = LABELS_CATEGORIA_MATERIAL[cat] || cat;
+      listaCategorias.appendChild(btn);
+    });
+  }
 
-  function render() {
-    const dados = filtrarMateriais({
+  async function render() {
+    const dados = await fetchMateriais({
       categoria: categoriaAtual || undefined,
       aplicacao: filtroAplicacao.value || undefined,
       busca: filtroBusca.value || undefined,
@@ -262,7 +264,7 @@
     render();
   });
 
-  render();
+  montarCategorias().then(render);
 </script>
 </body>
 </html>

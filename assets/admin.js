@@ -5,7 +5,7 @@
 // Só funciona depois que assets/supabase-client.js tiver a URL e a
 // chave anon reais preenchidas (ver supabase-setup.sql).
 // ===================================================================
-import { supabase, FOTOS_BUCKET, formatBRL, fetchConfig, salvarConfig } from './supabase-client.js';
+import { supabase, FOTOS_BUCKET, MATERIAIS_BUCKET, LABELS_CATEGORIA_MATERIAL, formatBRL, fetchConfig, salvarConfig } from './supabase-client.js';
 
 const els = {
   offlineNotice: document.querySelector('#offline-notice'),
@@ -27,6 +27,11 @@ const els = {
   configForm: document.querySelector('#config-form'),
   configFeedback: document.querySelector('#config-feedback'),
   geminiKeyInput: document.querySelector('#gemini-key'),
+  materiaisTableBody: document.querySelector('#materiais-tbody'),
+  materialForm: document.querySelector('#material-form'),
+  materialFeedback: document.querySelector('#material-feedback'),
+  materialFotoInput: document.querySelector('#material-foto'),
+  listaCategoriasMaterial: document.querySelector('#lista-categorias-material'),
 };
 
 if (!supabase) {
@@ -68,6 +73,15 @@ async function initAdmin() {
   if (els.configForm) {
     els.configForm.addEventListener('submit', handleConfigSubmit);
   }
+
+  if (els.materialForm) {
+    els.materialForm.addEventListener('submit', handleMaterialSubmit);
+  }
+
+  if (els.listaCategoriasMaterial) {
+    els.listaCategoriasMaterial.innerHTML = Object.keys(LABELS_CATEGORIA_MATERIAL)
+      .map(cat => `<option value="${cat}">${LABELS_CATEGORIA_MATERIAL[cat]}</option>`).join('');
+  }
 }
 
 function toggleAuthUI(session) {
@@ -81,6 +95,7 @@ function toggleAuthUI(session) {
     loadContato();
     loadEmpresa();
     loadConfig();
+    loadMateriais();
   }
 }
 
@@ -235,6 +250,98 @@ async function loadEmpresa() {
       <td>${e.segmento || '-'}</td>
     </tr>
   `).join('');
+}
+
+async function loadMateriais() {
+  if (!els.materiaisTableBody) return;
+  const { data, error } = await supabase.from('materiais').select('*').order('created_at', { ascending: false });
+  if (error) { console.error(error); return; }
+  els.materiaisTableBody.innerHTML = (data || []).map(m => `
+    <tr>
+      <td>${m.codigo}</td>
+      <td>${m.titulo}</td>
+      <td>${LABELS_CATEGORIA_MATERIAL[m.categoria] || m.categoria}</td>
+      <td>${formatBRL(m.preco)}</td>
+      <td>${m.status}</td>
+      <td>
+        <button class="btn btn-outline btn-sm" data-edit="${m.id}">Editar</button>
+        <button class="btn btn-sm" data-del="${m.id}" style="color:#E30613;background:none;">Excluir</button>
+      </td>
+    </tr>
+  `).join('');
+
+  els.materiaisTableBody.querySelectorAll('[data-edit]').forEach(btn => {
+    btn.addEventListener('click', () => fillMaterialFormForEdit(data.find(m => m.id === btn.dataset.edit)));
+  });
+  els.materiaisTableBody.querySelectorAll('[data-del]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Excluir este material?')) return;
+      await supabase.from('materiais').delete().eq('id', btn.dataset.del);
+      loadMateriais();
+    });
+  });
+}
+
+function fillMaterialFormForEdit(m) {
+  if (!m || !els.materialForm) return;
+  const f = els.materialForm;
+  f.id.value = m.id;
+  f.codigo.value = m.codigo;
+  f.titulo.value = m.titulo;
+  f.categoria.value = m.categoria;
+  f.aplicacao.value = m.aplicacao || '';
+  f.descricao.value = m.descricao || '';
+  f.preco.value = m.preco;
+  f.status.value = m.status;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function handleMaterialSubmit(e) {
+  e.preventDefault();
+  const f = els.materialForm;
+  const id = f.id.value;
+
+  let imagemUrl;
+  if (els.materialFotoInput && els.materialFotoInput.files.length) {
+    imagemUrl = await uploadFotoMaterial(els.materialFotoInput.files[0]);
+  }
+
+  const payload = {
+    codigo: f.codigo.value,
+    titulo: f.titulo.value,
+    categoria: f.categoria.value,
+    aplicacao: f.aplicacao.value || null,
+    descricao: f.descricao.value,
+    preco: Number(f.preco.value),
+    status: f.status.value,
+  };
+  if (imagemUrl) payload.imagem_url = imagemUrl;
+
+  let error;
+  if (id) {
+    ({ error } = await supabase.from('materiais').update(payload).eq('id', id));
+  } else {
+    ({ error } = await supabase.from('materiais').insert(payload));
+  }
+
+  if (error) {
+    els.materialFeedback.textContent = 'Erro ao salvar: ' + error.message;
+    els.materialFeedback.className = 'form-feedback err';
+  } else {
+    els.materialFeedback.textContent = 'Material salvo com sucesso!';
+    els.materialFeedback.className = 'form-feedback ok';
+    f.reset();
+    f.id.value = '';
+    loadMateriais();
+  }
+}
+
+async function uploadFotoMaterial(file) {
+  const path = `${Date.now()}-${file.name}`;
+  const { error } = await supabase.storage.from(MATERIAIS_BUCKET).upload(path, file);
+  if (error) { console.error(error); return null; }
+  const { data } = supabase.storage.from(MATERIAIS_BUCKET).getPublicUrl(path);
+  return data.publicUrl;
 }
 
 async function loadConfig() {
