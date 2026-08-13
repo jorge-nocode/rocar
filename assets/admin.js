@@ -323,6 +323,7 @@ async function handleMaterialSubmit(e) {
   };
   if (fotos.length) {
     payload.fotos = fotos;
+    payload.imagem = fotos[0];
     payload.imagem_url = fotos[0];
   }
 

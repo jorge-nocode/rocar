@@ -519,7 +519,7 @@ export const MATERIAIS_BUCKET = 'materiais-fotos';
 function normalizarMaterial(m) {
   const fotos = (Array.isArray(m.fotos) && m.fotos.length)
     ? m.fotos
-    : (m.imagem_url || m.foto ? [m.imagem_url || m.foto] : []);
+    : (m.imagem || m.imagem_url || m.foto ? [m.imagem || m.imagem_url || m.foto] : []);
   return {
     id: m.id || m.codigo,
     codigo: m.codigo,
