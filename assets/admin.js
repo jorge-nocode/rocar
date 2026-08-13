@@ -396,65 +396,68 @@ async function handleConfigSubmit(e) {
 // qualquer pessoa logada no painel, em qualquer computador, consegue
 // usar o botão "Gerar com IA" sem precisar configurar nada localmente.
 // ---------------------------------------------------------------
-// Modelos a tentar, em ordem. O 404 acontece quando o nome do modelo
-// não existe (ou não está mais disponível) para a versão v1beta da
-// API — por isso tentamos o próximo da lista automaticamente.
-const GEMINI_MODEL_CANDIDATES = ['gemini-1.5-flash', 'gemini-1.5-pro'];
+// Estrutura de chamada IDÊNTICA à usada no projeto QRV Artigos Táticos
+// (assets/gemini-ai.js), que já funciona em produção com a mesma
+// chave do AI Studio. Isso descarta de vez qualquer diferença de
+// endpoint/payload/headers como causa do 404 — se essa chave funciona
+// lá com essa estrutura, funciona aqui.
+const GEMINI_MODEL_CANDIDATES = ['gemini-flash-latest', 'gemini-2.5-flash', 'gemini-3.6-flash'];
 
-// Instrução de formato enviada via systemInstruction (separada do
-// texto do usuário), pedindo explicitamente um JSON puro no formato
-// esperado pelos formulários de Materiais e Serviços.
-const GEMINI_SYSTEM_INSTRUCTION = `Você é um assistente de e-commerce de materiais elétricos.
-O usuário enviará informações brutas de um produto ou serviço.
-Sua resposta DEVE SER EXCLUSIVAMENTE UM OBJETO JSON VÁLIDO no seguinte formato exato, sem marcações markdown de código (sem \`\`\`json), sem explicações:
-{
-  "nome": "Nome do Produto",
-  "titulo": "Título para Serviços",
-  "categoria": "Categoria apropriada",
-  "aplicacao": "Aplicação técnica",
-  "marca": "Marca se houver",
-  "preco": 35.00,
-  "descricao": "Descrição comercial completa"
-}`;
+// Chama o Gemini pedindo resposta em JSON e devolve o texto bruto
+// (ainda não parseado). Tenta cada modelo da lista em sequência,
+// pulando para o próximo só quando o erro indica que o modelo não
+// existe/não está mais disponível — igual ao comportamento da QRV.
+async function callGemini(apiKey, prompt) {
+  let lastError;
+  for (const model of GEMINI_MODEL_CANDIDATES) {
+    try {
+      const resp = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              responseMimeType: 'application/json',
+              temperature: 0.5,
+              maxOutputTokens: 4096,
+            },
+          }),
+        }
+      );
+      const data = await resp.json();
+      if (!resp.ok) {
+        lastError = new Error(data.error?.message || `Erro na API do Gemini (modelo ${model})`);
+        const msg = (data.error?.message || '').toLowerCase();
+        if (msg.includes('not found') || msg.includes('not supported') || msg.includes('no longer available') || msg.includes('deprecated')) {
+          continue;
+        }
+        throw lastError;
+      }
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!text) {
+        lastError = new Error('A IA não retornou nenhum conteúdo.');
+        continue;
+      }
+      return text;
+    } catch (err) {
+      lastError = err;
+    }
+  }
+  throw lastError || new Error('Nenhum modelo do Gemini respondeu.');
+}
 
-// Chama o Gemini pedindo resposta em JSON e devolve o objeto já
-// parseado. Lança erro se não houver chave configurada, se a API
-// falhar em todos os modelos ou se a resposta não for um JSON válido.
+// Une as duas etapas: chama o Gemini e já devolve o JSON parseado
+// (com o mesmo tratamento de markdown/quebras de linha de segurança
+// que já tínhamos, caso o texto não venha 100% limpo).
 async function gerarJSONComGemini(prompt) {
   const key = (await fetchConfig('chatbot_gemini_key') || '').trim();
   if (!key) {
     throw new Error('Nenhuma chave do Gemini configurada. Salve a chave na aba "Configurações" (ela vale para todos os admins).');
   }
 
-  let resp, data, lastErro;
-  for (const modelo of GEMINI_MODEL_CANDIDATES) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${encodeURIComponent(key)}`;
-    resp = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        systemInstruction: { parts: [{ text: GEMINI_SYSTEM_INSTRUCTION }] },
-        generationConfig: { temperature: 0.2 }
-      })
-    });
-
-    if (resp.ok) { data = await resp.json(); lastErro = null; break; }
-
-    lastErro = new Error(`Gemini respondeu ${resp.status} para o modelo "${modelo}"`);
-    if (resp.status !== 404) break;
-  }
-
-  if (lastErro) throw lastErro;
-
-  const candidato = data?.candidates?.[0];
-  const textoBruto = (candidato?.content?.parts || [])
-    .map(p => p.text || '').join('').trim();
-
-  if (!textoBruto) {
-    throw new Error('Resposta vazia da IA.');
-  }
-
+  const textoBruto = await callGemini(key, prompt);
   return parseJSONDaIA(textoBruto);
 }
 
