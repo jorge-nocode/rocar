@@ -402,10 +402,12 @@ async function handleConfigSubmit(e) {
 // tentamos vários nomes em sequência em vez de travar num só.
 const GEMINI_MODEL_CANDIDATES = ['gemini-1.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 
-// Chama o Gemini pedindo resposta em JSON puro e devolve o objeto já
-// parseado. Lança erro se não houver chave configurada, se a API
+// Chama o Gemini pedindo resposta em JSON puro (com responseSchema,
+// que força o modelo a devolver exatamente os campos pedidos mesmo
+// quando o usuário digita pouquíssima informação) e devolve o objeto
+// já parseado. Lança erro se não houver chave configurada, se a API
 // falhar ou se a resposta não for um JSON válido.
-async function gerarJSONComGemini(prompt) {
+async function gerarJSONComGemini(prompt, responseSchema) {
   const key = (await fetchConfig('chatbot_gemini_key') || '').trim();
   if (!key) {
     throw new Error('Nenhuma chave do Gemini configurada. Salve a chave na aba "Configurações" (ela vale para todos os admins).');
@@ -422,7 +424,8 @@ async function gerarJSONComGemini(prompt) {
         generationConfig: {
           temperature: 0.6,
           maxOutputTokens: 500,
-          responseMimeType: 'application/json'
+          responseMimeType: 'application/json',
+          ...(responseSchema ? { responseSchema } : {})
         }
       })
     });
@@ -483,6 +486,35 @@ function parseJSONDaIA(textoBruto) {
   }
 }
 
+// responseSchema exigido pela API do Gemini para forçar a resposta a
+// vir sempre no formato certo (todos os campos), mesmo com prompts
+// muito curtos como "Capacitor 35,00".
+const SCHEMA_MATERIAL_IA = {
+  type: 'OBJECT',
+  properties: {
+    codigo: { type: 'STRING' },
+    titulo: { type: 'STRING' },
+    categoria: { type: 'STRING' },
+    aplicacao: { type: 'STRING' },
+    preco: { type: 'NUMBER' },
+    descricao: { type: 'STRING' }
+  },
+  required: ['titulo', 'categoria', 'descricao']
+};
+
+const SCHEMA_SERVICO_IA = {
+  type: 'OBJECT',
+  properties: {
+    codigo: { type: 'STRING' },
+    titulo: { type: 'STRING' },
+    categoria: { type: 'STRING' },
+    marca: { type: 'STRING' },
+    preco: { type: 'NUMBER' },
+    descricao: { type: 'STRING' }
+  },
+  required: ['titulo', 'categoria', 'descricao']
+};
+
 async function handleGerarMaterialIA() {
   const f = els.materialForm;
   const raw = els.materialRaw?.value?.trim();
@@ -503,7 +535,8 @@ async function handleGerarMaterialIA() {
   const categoriasValidas = Object.keys(LABELS_CATEGORIA_MATERIAL);
   const aplicacoesValidas = Object.keys(LABELS_APLICACAO_MATERIAL);
 
-  const prompt = `Você é um especialista em vendas técnicas de peças e materiais para assistência técnica de motores elétricos, ferramentas e eletrodomésticos (Elétrica Rocar).
+  const prompt = `Você é um assistente de cadastro de produtos e serviços elétricos da Elétrica Rocar (assistência técnica de motores elétricos, ferramentas e eletrodomésticos). IMPORTANTE: mesmo que o usuário digite pouca informação (ex: "Capacitor 35,00"), você DEVE preencher todos os campos abaixo com base no seu conhecimento técnico sobre o produto. Retorne ESTRITAMENTE o JSON com as propriedades solicitadas, sem nenhum texto antes ou depois.
+
 Analise o texto bruto abaixo, colado por um funcionário da oficina, e responda APENAS com um JSON puro e válido — sem blocos de código markdown (nada de \`\`\`), sem crases, sem nenhum texto antes ou depois do objeto, sem quebras de linha dentro dos valores de texto (escreva a descrição em uma única linha), no formato exato:
 {"codigo":"...","titulo":"...","categoria":"...","aplicacao":"...","preco":0,"descricao":"..."}
 
@@ -521,7 +554,7 @@ ${raw}
 """`;
 
   try {
-    const json = await gerarJSONComGemini(prompt);
+    const json = await gerarJSONComGemini(prompt, SCHEMA_MATERIAL_IA);
 
     if (json.codigo) f.codigo.value = json.codigo;
     if (json.titulo) f.titulo.value = json.titulo;
@@ -561,7 +594,8 @@ async function handleGerarServicoIA() {
 
   const categoriasValidas = Array.from(f.categoria.options).map(o => o.value).filter(Boolean);
 
-  const prompt = `Você é um especialista em vendas técnicas de serviços de assistência técnica de motores elétricos, ferramentas e eletrodomésticos (Elétrica Rocar).
+  const prompt = `Você é um assistente de cadastro de produtos e serviços elétricos da Elétrica Rocar (assistência técnica de motores elétricos, ferramentas e eletrodomésticos). IMPORTANTE: mesmo que o usuário digite pouca informação (ex: "Capacitor 35,00"), você DEVE preencher todos os campos abaixo com base no seu conhecimento técnico sobre o produto/serviço. Retorne ESTRITAMENTE o JSON com as propriedades solicitadas, sem nenhum texto antes ou depois.
+
 Analise o texto bruto abaixo, colado por um funcionário da oficina, e responda APENAS com um JSON puro e válido — sem blocos de código markdown (nada de \`\`\`), sem crases, sem nenhum texto antes ou depois do objeto, sem quebras de linha dentro dos valores de texto (escreva a descrição em uma única linha), no formato exato:
 {"codigo":"...","titulo":"...","categoria":"...","marca":"...","preco":0,"descricao":"..."}
 
@@ -579,7 +613,7 @@ ${raw}
 """`;
 
   try {
-    const json = await gerarJSONComGemini(prompt);
+    const json = await gerarJSONComGemini(prompt, SCHEMA_SERVICO_IA);
 
     if (json.codigo) f.codigo.value = json.codigo;
     if (json.titulo) f.titulo.value = json.titulo;
