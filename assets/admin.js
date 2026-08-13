@@ -399,7 +399,7 @@ async function handleConfigSubmit(e) {
 // Modelos a tentar, em ordem. O 404 acontece quando o nome do modelo
 // não existe (ou não está mais disponível) para a versão v1beta da
 // API — por isso tentamos o próximo da lista automaticamente.
-const GEMINI_MODEL_CANDIDATES = ['gemini-2.0-flash', 'gemini-1.5-flash-latest'];
+const GEMINI_MODEL_CANDIDATES = ['gemini-1.5-flash', 'gemini-1.5-pro'];
 
 // Instrução de formato enviada via systemInstruction (separada do
 // texto do usuário), pedindo explicitamente um JSON puro no formato
