@@ -517,6 +517,9 @@ export const MATERIAIS_BUCKET = 'materiais-fotos';
 // Normaliza um registro (vindo do Supabase ou do MATERIAIS_EXEMPLO local)
 // para um formato único usado pelos cartões e pela página de detalhe.
 function normalizarMaterial(m) {
+  const fotos = (Array.isArray(m.fotos) && m.fotos.length)
+    ? m.fotos
+    : (m.imagem_url || m.foto ? [m.imagem_url || m.foto] : []);
   return {
     id: m.id || m.codigo,
     codigo: m.codigo,
@@ -525,7 +528,8 @@ function normalizarMaterial(m) {
     aplicacao: m.aplicacao || null,
     descricao: m.descricao || '',
     preco: m.preco,
-    imagem_url: m.imagem_url || m.foto || null,
+    fotos,
+    imagem_url: fotos[0] || null,
     icone: m.icone || null,
     status: m.status || 'ativo'
   };
@@ -588,8 +592,12 @@ export async function fetchMaterialById(id) {
   return data ? normalizarMaterial(data) : null;
 }
 
-export function whatsappLinkMaterial(m) {
-  const msg = `Olá! Quero comprar: ${m.titulo} (${m.codigo}) - ${formatBRL(m.preco)}. Ainda tem disponível?`;
+export function whatsappLinkMaterial(m, quantidade = 1) {
+  const qtd = Math.max(1, Number(quantidade) || 1);
+  const total = formatBRL(m.preco * qtd);
+  const msg = qtd > 1
+    ? `Olá! Quero comprar: ${qtd}x ${m.titulo} (${m.codigo}) - Total ${total}. Ainda tem disponível?`
+    : `Olá! Quero comprar: ${m.titulo} (${m.codigo}) - ${formatBRL(m.preco)}. Ainda tem disponível?`;
   return whatsappLink(msg);
 }
 

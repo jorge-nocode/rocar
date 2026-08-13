@@ -30,7 +30,7 @@ const els = {
   materiaisTableBody: document.querySelector('#materiais-tbody'),
   materialForm: document.querySelector('#material-form'),
   materialFeedback: document.querySelector('#material-feedback'),
-  materialFotoInput: document.querySelector('#material-foto'),
+  materialFotosInput: document.querySelector('#material-fotos'),
   listaCategoriasMaterial: document.querySelector('#lista-categorias-material'),
 };
 
@@ -301,9 +301,9 @@ async function handleMaterialSubmit(e) {
   const f = els.materialForm;
   const id = f.id.value;
 
-  let imagemUrl;
-  if (els.materialFotoInput && els.materialFotoInput.files.length) {
-    imagemUrl = await uploadFotoMaterial(els.materialFotoInput.files[0]);
+  let fotos = [];
+  if (els.materialFotosInput && els.materialFotosInput.files.length) {
+    fotos = await uploadFotosMaterial(els.materialFotosInput.files);
   }
 
   const payload = {
@@ -315,7 +315,10 @@ async function handleMaterialSubmit(e) {
     preco: Number(f.preco.value),
     status: f.status.value,
   };
-  if (imagemUrl) payload.imagem_url = imagemUrl;
+  if (fotos.length) {
+    payload.fotos = fotos;
+    payload.imagem_url = fotos[0];
+  }
 
   let error;
   if (id) {
@@ -336,12 +339,16 @@ async function handleMaterialSubmit(e) {
   }
 }
 
-async function uploadFotoMaterial(file) {
-  const path = `${Date.now()}-${file.name}`;
-  const { error } = await supabase.storage.from(MATERIAIS_BUCKET).upload(path, file);
-  if (error) { console.error(error); return null; }
-  const { data } = supabase.storage.from(MATERIAIS_BUCKET).getPublicUrl(path);
-  return data.publicUrl;
+async function uploadFotosMaterial(fileList) {
+  const urls = [];
+  for (const file of fileList) {
+    const path = `${Date.now()}-${file.name}`;
+    const { error } = await supabase.storage.from(MATERIAIS_BUCKET).upload(path, file);
+    if (error) { console.error(error); continue; }
+    const { data } = supabase.storage.from(MATERIAIS_BUCKET).getPublicUrl(path);
+    urls.push(data.publicUrl);
+  }
+  return urls;
 }
 
 async function loadConfig() {

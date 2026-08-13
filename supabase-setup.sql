@@ -91,10 +91,15 @@ create table if not exists public.materiais (
   aplicacao text,                    -- motores | bombas | ferramentas | eletrodomesticos | geral
   descricao text,
   preco numeric not null,            -- preço "a partir de"
-  imagem_url text,                   -- URL pública da foto do produto
+  imagem_url text,                   -- URL pública da 1ª foto (compatibilidade/preview em listagens)
+  fotos text[] default '{}',         -- galeria completa (página de produto com miniaturas/zoom)
   status text not null default 'ativo',  -- ativo | inativo
   created_at timestamptz default now()
 );
+
+-- Caso a tabela já existisse (criada antes da coluna "fotos" existir),
+-- garante que ela seja adicionada sem apagar nada.
+alter table public.materiais add column if not exists fotos text[] default '{}';
 
 -- ---------------------------------------------------------------
 -- Configuração chave/valor (uso geral, ex: chave de API de chat)
