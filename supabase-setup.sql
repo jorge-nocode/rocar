@@ -117,7 +117,7 @@ alter table public.materiais enable row level security;
 
 -- >>> TROQUE pelo e-mail que você vai usar para logar no painel admin <<<
 -- (mesmo e-mail cadastrado em Supabase Authentication > Users)
--- Sugestão: eletricarocar@gmail.com
+-- Sugestão: santanadds92@gmail.com
 
 -- Leitura pública: só serviços ativos
 drop policy if exists "publico le servicos ativos" on public.servicos;
@@ -127,8 +127,8 @@ create policy "publico le servicos ativos" on public.servicos
 -- Gestão total: só o e-mail autorizado
 drop policy if exists "admin gerencia servicos" on public.servicos;
 create policy "admin gerencia servicos" on public.servicos
-  for all using (auth.jwt() ->> 'email' = 'eletricarocar@gmail.com')
-  with check (auth.jwt() ->> 'email' = 'eletricarocar@gmail.com');
+  for all using (auth.jwt() ->> 'email' = 'santanadds92@gmail.com')
+  with check (auth.jwt() ->> 'email' = 'santanadds92@gmail.com');
 
 -- Qualquer visitante pode enviar mensagens/solicitações (insert público)
 drop policy if exists "publico envia contato" on public.mensagens_contato;
@@ -136,42 +136,42 @@ create policy "publico envia contato" on public.mensagens_contato
   for insert with check (true);
 drop policy if exists "admin le contato" on public.mensagens_contato;
 create policy "admin le contato" on public.mensagens_contato
-  for select using (auth.jwt() ->> 'email' = 'eletricarocar@gmail.com');
+  for select using (auth.jwt() ->> 'email' = 'santanadds92@gmail.com');
 drop policy if exists "admin atualiza contato" on public.mensagens_contato;
 create policy "admin atualiza contato" on public.mensagens_contato
-  for update using (auth.jwt() ->> 'email' = 'eletricarocar@gmail.com');
+  for update using (auth.jwt() ->> 'email' = 'santanadds92@gmail.com');
 
 drop policy if exists "publico envia orcamento" on public.solicitacoes_orcamento;
 create policy "publico envia orcamento" on public.solicitacoes_orcamento
   for insert with check (true);
 drop policy if exists "admin le orcamento" on public.solicitacoes_orcamento;
 create policy "admin le orcamento" on public.solicitacoes_orcamento
-  for select using (auth.jwt() ->> 'email' = 'eletricarocar@gmail.com');
+  for select using (auth.jwt() ->> 'email' = 'santanadds92@gmail.com');
 drop policy if exists "admin atualiza orcamento" on public.solicitacoes_orcamento;
 create policy "admin atualiza orcamento" on public.solicitacoes_orcamento
-  for update using (auth.jwt() ->> 'email' = 'eletricarocar@gmail.com');
+  for update using (auth.jwt() ->> 'email' = 'santanadds92@gmail.com');
 
 drop policy if exists "publico envia empresa" on public.solicitacoes_empresa;
 create policy "publico envia empresa" on public.solicitacoes_empresa
   for insert with check (true);
 drop policy if exists "admin le empresa" on public.solicitacoes_empresa;
 create policy "admin le empresa" on public.solicitacoes_empresa
-  for select using (auth.jwt() ->> 'email' = 'eletricarocar@gmail.com');
+  for select using (auth.jwt() ->> 'email' = 'santanadds92@gmail.com');
 drop policy if exists "admin atualiza empresa" on public.solicitacoes_empresa;
 create policy "admin atualiza empresa" on public.solicitacoes_empresa
-  for update using (auth.jwt() ->> 'email' = 'eletricarocar@gmail.com');
+  for update using (auth.jwt() ->> 'email' = 'santanadds92@gmail.com');
 
 drop policy if exists "publico assina newsletter" on public.newsletter;
 create policy "publico assina newsletter" on public.newsletter
   for insert with check (true);
 drop policy if exists "admin le newsletter" on public.newsletter;
 create policy "admin le newsletter" on public.newsletter
-  for select using (auth.jwt() ->> 'email' = 'eletricarocar@gmail.com');
+  for select using (auth.jwt() ->> 'email' = 'santanadds92@gmail.com');
 
 drop policy if exists "admin gerencia config" on public.site_config;
 create policy "admin gerencia config" on public.site_config
-  for all using (auth.jwt() ->> 'email' = 'eletricarocar@gmail.com')
-  with check (auth.jwt() ->> 'email' = 'eletricarocar@gmail.com');
+  for all using (auth.jwt() ->> 'email' = 'santanadds92@gmail.com')
+  with check (auth.jwt() ->> 'email' = 'santanadds92@gmail.com');
 
 -- Leitura pública apenas da chave do chatbot (o widget roda no navegador
 -- do visitante e precisa ler essa chave para chamar a API do Gemini).
@@ -192,8 +192,8 @@ create policy "publico le materiais ativos" on public.materiais
 -- Gestão total: só o e-mail autorizado
 drop policy if exists "admin gerencia materiais" on public.materiais;
 create policy "admin gerencia materiais" on public.materiais
-  for all using (auth.jwt() ->> 'email' = 'eletricarocar@gmail.com')
-  with check (auth.jwt() ->> 'email' = 'eletricarocar@gmail.com');
+  for all using (auth.jwt() ->> 'email' = 'santanadds92@gmail.com')
+  with check (auth.jwt() ->> 'email' = 'santanadds92@gmail.com');
 
 -- ===================================================================
 -- Storage: bucket de fotos dos serviços
@@ -208,11 +208,11 @@ create policy "leitura publica fotos" on storage.objects
 
 drop policy if exists "admin upload fotos" on storage.objects;
 create policy "admin upload fotos" on storage.objects
-  for insert with check (bucket_id = 'servicos-fotos' and auth.jwt() ->> 'email' = 'eletricarocar@gmail.com');
+  for insert with check (bucket_id = 'servicos-fotos' and auth.jwt() ->> 'email' = 'santanadds92@gmail.com');
 
 drop policy if exists "admin remove fotos" on storage.objects;
 create policy "admin remove fotos" on storage.objects
-  for delete using (bucket_id = 'servicos-fotos' and auth.jwt() ->> 'email' = 'eletricarocar@gmail.com');
+  for delete using (bucket_id = 'servicos-fotos' and auth.jwt() ->> 'email' = 'santanadds92@gmail.com');
 
 -- ===================================================================
 -- Storage: bucket de fotos dos materiais/produtos
@@ -227,8 +227,8 @@ create policy "leitura publica fotos materiais" on storage.objects
 
 drop policy if exists "admin upload fotos materiais" on storage.objects;
 create policy "admin upload fotos materiais" on storage.objects
-  for insert with check (bucket_id = 'materiais-fotos' and auth.jwt() ->> 'email' = 'eletricarocar@gmail.com');
+  for insert with check (bucket_id = 'materiais-fotos' and auth.jwt() ->> 'email' = 'santanadds92@gmail.com');
 
 drop policy if exists "admin remove fotos materiais" on storage.objects;
 create policy "admin remove fotos materiais" on storage.objects
-  for delete using (bucket_id = 'materiais-fotos' and auth.jwt() ->> 'email' = 'eletricarocar@gmail.com');
+  for delete using (bucket_id = 'materiais-fotos' and auth.jwt() ->> 'email' = 'santanadds92@gmail.com');
