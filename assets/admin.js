@@ -413,24 +413,37 @@ async function gerarJSONComGemini(prompt, responseSchema) {
     throw new Error('Nenhuma chave do Gemini configurada. Salve a chave na aba "Configurações" (ela vale para todos os admins).');
   }
 
-  let resp, lastErro;
+  let resp, data, lastErro;
   for (const modelo of GEMINI_MODEL_CANDIDATES) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${encodeURIComponent(key)}`;
+    const generationConfig = {
+      temperature: 0.6,
+      // Tokens suficientes para o JSON completo (nome/título, categoria,
+      // aplicação/marca, preço e uma descrição de até ~80 palavras).
+      maxOutputTokens: 1024,
+      responseMimeType: 'application/json',
+      ...(responseSchema ? { responseSchema } : {})
+    };
+    // Modelos da família "2.5"/"latest" usam "thinking" (raciocínio
+    // interno) por padrão, e esses tokens de raciocínio saem do MESMO
+    // orçamento de maxOutputTokens — na prática isso consumia todo o
+    // limite e cortava o JSON pela metade, o que gerava o erro
+    // "conteúdo em formato inesperado". Desligamos o thinking para
+    // esses modelos, já que aqui só queremos uma extração direta.
+    if (/2\.5|latest/.test(modelo)) {
+      generationConfig.thinkingConfig = { thinkingBudget: 0 };
+    }
+
     resp = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.6,
-          maxOutputTokens: 500,
-          responseMimeType: 'application/json',
-          ...(responseSchema ? { responseSchema } : {})
-        }
+        generationConfig
       })
     });
 
-    if (resp.ok) { lastErro = null; break; }
+    if (resp.ok) { data = await resp.json(); lastErro = null; break; }
 
     lastErro = new Error(`Gemini respondeu ${resp.status} para o modelo "${modelo}"`);
     // Só tenta o próximo modelo se o erro for "modelo não encontrado/indisponível";
@@ -440,11 +453,16 @@ async function gerarJSONComGemini(prompt, responseSchema) {
 
   if (lastErro) throw lastErro;
 
-  const data = await resp.json();
-  const textoBruto = (data?.candidates?.[0]?.content?.parts || [])
+  const candidato = data?.candidates?.[0];
+  const textoBruto = (candidato?.content?.parts || [])
     .map(p => p.text || '').join('').trim();
 
-  if (!textoBruto) throw new Error('Resposta vazia da IA.');
+  if (candidato?.finishReason === 'MAX_TOKENS') {
+    throw new Error('A resposta da IA foi cortada por limite de tamanho antes de terminar o JSON. Clique em "Gerar com IA" novamente.');
+  }
+  if (!textoBruto) {
+    throw new Error('Resposta vazia da IA.');
+  }
 
   return parseJSONDaIA(textoBruto);
 }
@@ -487,32 +505,25 @@ function parseJSONDaIA(textoBruto) {
 }
 
 // responseSchema exigido pela API do Gemini para forçar a resposta a
-// vir sempre no formato certo (todos os campos), mesmo com prompts
-// muito curtos como "Capacitor 35,00".
-const SCHEMA_MATERIAL_IA = {
+// vir sempre no formato certo, mesmo com prompts muito curtos como
+// "Capacitor 35,00". Um único schema com todos os campos possíveis
+// (usado tanto para Materiais quanto para Serviços — cada tela só lê
+// as propriedades que usa). Só "descricao" é obrigatório, para não
+// arriscar a chamada inteira falhar quando algum outro campo não
+// puder ser inferido com segurança pelo texto colado.
+const SCHEMA_IA = {
   type: 'OBJECT',
   properties: {
     codigo: { type: 'STRING' },
+    nome: { type: 'STRING' },
     titulo: { type: 'STRING' },
     categoria: { type: 'STRING' },
     aplicacao: { type: 'STRING' },
-    preco: { type: 'NUMBER' },
-    descricao: { type: 'STRING' }
-  },
-  required: ['titulo', 'categoria', 'descricao']
-};
-
-const SCHEMA_SERVICO_IA = {
-  type: 'OBJECT',
-  properties: {
-    codigo: { type: 'STRING' },
-    titulo: { type: 'STRING' },
-    categoria: { type: 'STRING' },
     marca: { type: 'STRING' },
     preco: { type: 'NUMBER' },
     descricao: { type: 'STRING' }
   },
-  required: ['titulo', 'categoria', 'descricao']
+  required: ['descricao']
 };
 
 async function handleGerarMaterialIA() {
@@ -554,10 +565,10 @@ ${raw}
 """`;
 
   try {
-    const json = await gerarJSONComGemini(prompt, SCHEMA_MATERIAL_IA);
+    const json = await gerarJSONComGemini(prompt, SCHEMA_IA);
 
     if (json.codigo) f.codigo.value = json.codigo;
-    if (json.titulo) f.titulo.value = json.titulo;
+    if (json.titulo || json.nome) f.titulo.value = json.titulo || json.nome;
     if (json.categoria) f.categoria.value = json.categoria;
     if (json.aplicacao && aplicacoesValidas.includes(json.aplicacao)) f.aplicacao.value = json.aplicacao;
     if (json.preco !== undefined && json.preco !== null && json.preco !== '') f.preco.value = Number(json.preco);
@@ -613,10 +624,10 @@ ${raw}
 """`;
 
   try {
-    const json = await gerarJSONComGemini(prompt, SCHEMA_SERVICO_IA);
+    const json = await gerarJSONComGemini(prompt, SCHEMA_IA);
 
     if (json.codigo) f.codigo.value = json.codigo;
-    if (json.titulo) f.titulo.value = json.titulo;
+    if (json.titulo || json.nome) f.titulo.value = json.titulo || json.nome;
     if (json.categoria && categoriasValidas.includes(json.categoria)) f.categoria.value = json.categoria;
     if (json.marca) f.marca.value = json.marca;
     if (json.preco !== undefined && json.preco !== null && json.preco !== '') f.preco.value = Number(json.preco);
