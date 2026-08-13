@@ -377,8 +377,10 @@ const ICONE_CAPACITOR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentCol
 const ICONE_ROLAMENTO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.6"/><circle cx="12" cy="5.2" r="1" fill="currentColor" stroke="none"/><circle cx="18.8" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="18.8" r="1" fill="currentColor" stroke="none"/><circle cx="5.2" cy="12" r="1" fill="currentColor" stroke="none"/></svg>';
 const ICONE_CABO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6v3a5 5 0 0 0 5 5h6a5 5 0 0 1 5 5v1"/><path d="M4 4v4M8 4v4"/></svg>';
 const ICONE_INDUZIDO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="20" rx="2"/><path d="M5 6h4M15 6h4M5 12h4M15 12h4M5 18h4M15 18h4"/></svg>';
+const ICONE_MICROONDAS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><rect x="4.5" y="6.5" width="11" height="11" rx="1"/><circle cx="19" cy="9" r="1" fill="currentColor" stroke="none"/><path d="M17 13h4M17 16h4"/></svg>';
 
 export const LABELS_CATEGORIA_MATERIAL = {
+  'microondas-seminovos': 'Micro-ondas Seminovos',
   'isolacao': 'Isolação',
   'fios-de-cobre': 'Fios de Cobre',
   'selos-mecanicos': 'Selos Mecânicos',
@@ -391,6 +393,7 @@ export const LABELS_CATEGORIA_MATERIAL = {
 };
 
 export const LABELS_APLICACAO_MATERIAL = {
+  'eletrodomesticos': 'Eletrodomésticos',
   'motores': 'Motores',
   'bombas': 'Bombas',
   'ferramentas': 'Ferramentas',
@@ -398,6 +401,15 @@ export const LABELS_APLICACAO_MATERIAL = {
 };
 
 export const MATERIAIS_EXEMPLO = [
+  {
+    codigo: 'MIC-SEMI-01',
+    titulo: 'Micro-ondas Seminovos',
+    descricao: 'Micro-ondas seminovos revisados e testados pela nossa oficina, prontos para uso, com garantia.',
+    icone: ICONE_MICROONDAS,
+    categoria: 'microondas-seminovos',
+    aplicacao: 'eletrodomesticos',
+    preco: 180
+  },
   {
     codigo: 'MAT-001',
     titulo: 'Isolação Branca para Motor',
