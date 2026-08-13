@@ -610,6 +610,75 @@ footer{background:var(--footer-bg);color:rgba(255,255,255,.8);padding:56px 0 24p
 .admin-login{max-width:380px;margin:100px auto;}
 @media(max-width:900px){.admin-shell{flex-direction:column;}.admin-sidebar{width:100%;}}
 
+/* ---------- Admin: tema escuro (padrão QRV, cores da Rocar) ----------
+   Escopado só dentro de body.admin-body, então nada fora do painel
+   admin é afetado. Estrutura/hierarquia igual à do painel dark da QRV
+   (fundo grafite, cards escuros, texto claro, bordas sutis), mas com
+   o acento em vermelho/preto/verde da Rocar em vez do dourado da QRV. */
+body.admin-body{
+  --bg:#0d0d0d;
+  --bg-alt:#141414;
+  --panel:#1a1a1a;
+  --panel-alt:#1f1f1f;
+  --text:#f2f2f0;
+  --text-muted:#9a9a94;
+  --border:rgba(255,255,255,.09);
+  --border-strong:rgba(255,255,255,.18);
+  background:var(--bg);color:var(--text);min-height:100vh;
+}
+body.admin-body #offline-notice{background:#000;}
+body.admin-body .admin-login .form-card{background:var(--panel);border:1px solid var(--border);box-shadow:0 16px 40px rgba(0,0,0,.5);}
+body.admin-body .admin-login h3{color:var(--text);}
+body.admin-body .admin-login .muted{color:var(--text-muted);}
+body.admin-body .admin-shell{background:var(--bg);}
+body.admin-body .admin-sidebar{background:#080808;border-right:1px solid var(--border);}
+body.admin-body .admin-sidebar nav a{color:var(--text-muted);}
+body.admin-body .admin-sidebar nav a.active,
+body.admin-body .admin-sidebar nav a:hover{background:var(--red);color:#fff;}
+body.admin-body .admin-main{background:var(--bg);}
+body.admin-body .admin-main h2{color:var(--text);}
+body.admin-body .form-card{background:var(--panel);border:1px solid var(--border);box-shadow:0 16px 40px rgba(0,0,0,.5);}
+body.admin-body .field label{color:var(--text-muted);}
+body.admin-body .field input,
+body.admin-body .field select,
+body.admin-body .field textarea{
+  background:var(--bg-alt);color:var(--text);border:1px solid var(--border);
+}
+body.admin-body .field input::placeholder,
+body.admin-body .field textarea::placeholder{color:rgba(255,255,255,.35);}
+body.admin-body .field input:focus,
+body.admin-body .field select:focus,
+body.admin-body .field textarea:focus{outline:none;border-color:var(--red);}
+body.admin-body .field select option{background:var(--bg-alt);color:var(--text);}
+body.admin-body .admin-table{background:var(--panel);border:1px solid var(--border);box-shadow:0 16px 40px rgba(0,0,0,.5);}
+body.admin-body .admin-table th{background:var(--bg-alt);color:var(--text-muted);border-bottom:1px solid var(--border-strong);}
+body.admin-body .admin-table td{border-bottom:1px solid var(--border);color:var(--text);}
+body.admin-body .admin-table tbody tr:hover{background:rgba(255,255,255,.03);}
+body.admin-body .btn-outline{border-color:var(--border-strong);color:var(--text);}
+body.admin-body .btn-outline:hover{background:var(--red);border-color:var(--red);color:#fff;}
+body.admin-body .btn-primary{background:var(--red);box-shadow:0 10px 24px rgba(227,6,19,.3);}
+body.admin-body .btn-primary:hover{background:#c1050f;}
+body.admin-body .muted{color:var(--text-muted);}
+
+/* Caixa de preenchimento automático por IA, no topo dos formulários de
+   cadastro (Materiais e Serviços) — mesmo padrão visual da QRV. */
+.ai-autofill-box{
+  background:var(--panel-alt,#1f1f1f);border:1px solid var(--red);border-radius:var(--radius-md);
+  padding:22px 24px;margin-bottom:26px;
+}
+.ai-autofill-box .ai-autofill-title{
+  display:block;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;font-weight:700;
+  color:var(--red);margin-bottom:12px;
+}
+.ai-autofill-box textarea{
+  width:100%;background:var(--bg-alt,#141414);color:var(--text,#f2f2f0);border:1px solid var(--border,rgba(255,255,255,.09));
+  border-radius:var(--radius-sm);padding:12px 14px;font-family:inherit;font-size:.88rem;resize:vertical;min-height:90px;margin-bottom:14px;
+}
+.ai-autofill-box textarea:focus{outline:none;border-color:var(--red);}
+.ai-autofill-box textarea::placeholder{color:rgba(255,255,255,.35);}
+.ai-autofill-box .ai-hint{font-size:.76rem;color:var(--text-muted,#9a9a94);margin-top:10px;margin-bottom:0;}
+.ai-autofill-box .form-feedback{margin-top:10px;}
+
 /* ---------- Payment icons row ---------- */
 .pay-icons{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
 .pay-icons svg{height:22px;width:auto;}

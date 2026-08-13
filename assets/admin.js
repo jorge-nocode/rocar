@@ -32,8 +32,12 @@ const els = {
   materialFeedback: document.querySelector('#material-feedback'),
   materialFotosInput: document.querySelector('#material-fotos'),
   listaCategoriasMaterial: document.querySelector('#lista-categorias-material'),
-  materialGerarDescBtn: document.querySelector('#material-gerar-desc-btn'),
-  materialDescFeedback: document.querySelector('#material-desc-feedback'),
+  materialRaw: document.querySelector('#material-raw'),
+  materialGerarIaBtn: document.querySelector('#material-gerar-ia-btn'),
+  materialIaFeedback: document.querySelector('#material-ia-feedback'),
+  servicoRaw: document.querySelector('#servico-raw'),
+  servicoGerarIaBtn: document.querySelector('#servico-gerar-ia-btn'),
+  servicoIaFeedback: document.querySelector('#servico-ia-feedback'),
 };
 
 if (!supabase) {
@@ -80,8 +84,12 @@ async function initAdmin() {
     els.materialForm.addEventListener('submit', handleMaterialSubmit);
   }
 
-  if (els.materialGerarDescBtn) {
-    els.materialGerarDescBtn.addEventListener('click', handleGerarDescricaoIA);
+  if (els.materialGerarIaBtn) {
+    els.materialGerarIaBtn.addEventListener('click', handleGerarMaterialIA);
+  }
+
+  if (els.servicoGerarIaBtn) {
+    els.servicoGerarIaBtn.addEventListener('click', handleGerarServicoIA);
   }
 
   if (els.listaCategoriasMaterial) {
@@ -378,9 +386,11 @@ async function handleConfigSubmit(e) {
 }
 
 // ---------------------------------------------------------------
-// Preenchimento automático do cadastro de material com IA (Google
-// Gemini). A chave da API NUNCA é digitada/guardada no navegador de
-// cada admin: ela fica salva uma única vez na tabela 'site_config' do
+// Preenchimento automático COMPLETO do cadastro (Materiais e Serviços)
+// com IA (Google Gemini), a partir de um texto bruto colado pelo
+// usuário na caixa "Preenchimento Automático por IA" no topo de cada
+// formulário. A chave da API NUNCA é digitada/guardada no navegador de
+// cada admin: fica salva uma única vez na tabela 'site_config' do
 // Supabase (chave 'chatbot_gemini_key', editável na aba
 // "Configurações") e é buscada via fetchConfig() a cada uso — assim
 // qualquer pessoa logada no painel, em qualquer computador, consegue
@@ -389,26 +399,53 @@ async function handleConfigSubmit(e) {
 const GEMINI_MODEL = 'gemini-2.5-flash';
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
-async function handleGerarDescricaoIA() {
-  const f = els.materialForm;
-  const nome = f?.titulo?.value?.trim();
-  const feedback = els.materialDescFeedback;
-  if (!nome) {
-    feedback.textContent = 'Preencha o Nome do produto primeiro.';
-    feedback.className = 'form-feedback err';
-    return;
-  }
-
-  // Busca a chave sempre no Supabase (nunca localStorage/input local),
-  // garantindo que funcione em qualquer computador logado no admin.
+// Chama o Gemini pedindo resposta em JSON puro e devolve o objeto já
+// parseado. Lança erro se não houver chave configurada, se a API
+// falhar ou se a resposta não for um JSON válido.
+async function gerarJSONComGemini(prompt) {
   const key = await fetchConfig('chatbot_gemini_key');
   if (!key) {
-    feedback.textContent = 'Nenhuma chave do Gemini configurada. Peça para salvar a chave na aba "Configurações" (ela vale para todos os admins).';
+    throw new Error('Nenhuma chave do Gemini configurada. Salve a chave na aba "Configurações" (ela vale para todos os admins).');
+  }
+
+  const resp = await fetch(`${GEMINI_URL}?key=${encodeURIComponent(key)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.6,
+        maxOutputTokens: 500,
+        responseMimeType: 'application/json'
+      }
+    })
+  });
+
+  if (!resp.ok) throw new Error(`Gemini respondeu ${resp.status}`);
+
+  const data = await resp.json();
+  const textoBruto = (data?.candidates?.[0]?.content?.parts || [])
+    .map(p => p.text || '').join('').trim();
+
+  if (!textoBruto) throw new Error('Resposta vazia da IA.');
+
+  // Mesmo pedindo JSON puro, remove eventuais cercas de código como
+  // segurança extra antes do parse.
+  const limpo = textoBruto.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/```$/, '').trim();
+  return JSON.parse(limpo);
+}
+
+async function handleGerarMaterialIA() {
+  const f = els.materialForm;
+  const raw = els.materialRaw?.value?.trim();
+  const feedback = els.materialIaFeedback;
+  if (!raw) {
+    feedback.textContent = 'Cole as informações brutas do produto na caixa acima primeiro.';
     feedback.className = 'form-feedback err';
     return;
   }
 
-  const btn = els.materialGerarDescBtn;
+  const btn = els.materialGerarIaBtn;
   const textoOriginal = btn.textContent;
   btn.disabled = true;
   btn.textContent = 'Gerando...';
@@ -419,54 +456,91 @@ async function handleGerarDescricaoIA() {
   const aplicacoesValidas = Object.keys(LABELS_APLICACAO_MATERIAL);
 
   const prompt = `Você é um especialista em vendas técnicas de peças e materiais para assistência técnica de motores elétricos, ferramentas e eletrodomésticos (Elétrica Rocar).
-Para o produto "${nome}", responda APENAS com um JSON válido (sem markdown, sem texto extra, sem crases), no formato exato:
-{"nome":"...","categoria":"...","aplicacao":"...","descricao":"..."}
+Analise o texto bruto abaixo, colado por um funcionário da oficina, e responda APENAS com um JSON válido (sem markdown, sem texto extra, sem crases), no formato exato:
+{"codigo":"...","titulo":"...","categoria":"...","aplicacao":"...","preco":0,"descricao":"..."}
 
 Regras:
-- "nome": nome técnico e comercial bem formatado do produto (pode ajustar/corrigir o texto digitado).
-- "categoria": escolha OBRIGATORIAMENTE um destes valores (a chave em minúsculas, sem acento): ${categoriasValidas.join(', ')}. Se nenhum encaixar perfeitamente, use o mais próximo.
+- "codigo": se houver um código/referência no texto, use-o; senão gere um código curto plausível no padrão "MAT-XXX" (letras maiúsculas e números).
+- "titulo": nome técnico e comercial bem formatado do produto.
+- "categoria": escolha OBRIGATORIAMENTE um destes valores (em minúsculas, sem acento): ${categoriasValidas.join(', ')}. Use o mais próximo se nenhum encaixar perfeitamente.
 - "aplicacao": escolha OBRIGATORIAMENTE um destes valores: ${aplicacoesValidas.join(', ')}.
-- "descricao": descrição comercial detalhada, técnica e atrativa, entre 50 e 80 palavras, em português do Brasil.`;
+- "preco": número (apenas dígitos e ponto decimal, sem "R$" e sem separador de milhar). Se não houver preço no texto, estime um valor de mercado plausível para o produto.
+- "descricao": descrição comercial detalhada, técnica e atrativa, entre 50 e 80 palavras, em português do Brasil.
+
+Texto bruto:
+"""
+${raw}
+"""`;
 
   try {
-    const resp = await fetch(`${GEMINI_URL}?key=${encodeURIComponent(key)}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 400,
-          responseMimeType: 'application/json'
-        }
-      })
-    });
+    const json = await gerarJSONComGemini(prompt);
 
-    if (!resp.ok) throw new Error(`Gemini respondeu ${resp.status}`);
-
-    const data = await resp.json();
-    const textoBruto = (data?.candidates?.[0]?.content?.parts || [])
-      .map(p => p.text || '').join('').trim();
-
-    if (!textoBruto) throw new Error('Resposta vazia da IA.');
-
-    // Mesmo pedindo JSON puro, remove eventuais cercas de código como
-    // segurança extra antes do parse.
-    const limpo = textoBruto.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/```$/, '').trim();
-    const json = JSON.parse(limpo);
-
-    if (json.nome) f.titulo.value = json.nome;
-    if (json.categoria && categoriasValidas.includes(json.categoria)) {
-      f.categoria.value = json.categoria;
-    } else if (json.categoria) {
-      f.categoria.value = json.categoria; // deixa preenchido mesmo fora da lista, pra revisão
-    }
-    if (json.aplicacao && aplicacoesValidas.includes(json.aplicacao)) {
-      f.aplicacao.value = json.aplicacao;
-    }
+    if (json.codigo) f.codigo.value = json.codigo;
+    if (json.titulo) f.titulo.value = json.titulo;
+    if (json.categoria) f.categoria.value = json.categoria;
+    if (json.aplicacao && aplicacoesValidas.includes(json.aplicacao)) f.aplicacao.value = json.aplicacao;
+    if (json.preco !== undefined && json.preco !== null && json.preco !== '') f.preco.value = Number(json.preco);
     if (json.descricao) f.descricao.value = json.descricao;
 
-    feedback.textContent = 'Nome, categoria, aplicação e descrição gerados com sucesso!';
+    feedback.textContent = 'Código, nome, categoria, aplicação, preço e descrição gerados com sucesso! Revise antes de salvar.';
+    feedback.className = 'form-feedback ok';
+  } catch (err) {
+    console.error(err);
+    feedback.textContent = 'Erro ao gerar com IA: ' + err.message;
+    feedback.className = 'form-feedback err';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = textoOriginal;
+  }
+}
+
+async function handleGerarServicoIA() {
+  const f = els.servicoForm;
+  const raw = els.servicoRaw?.value?.trim();
+  const feedback = els.servicoIaFeedback;
+  if (!raw) {
+    feedback.textContent = 'Cole as informações brutas do serviço na caixa acima primeiro.';
+    feedback.className = 'form-feedback err';
+    return;
+  }
+
+  const btn = els.servicoGerarIaBtn;
+  const textoOriginal = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Gerando...';
+  feedback.textContent = '';
+  feedback.className = 'form-feedback';
+
+  const categoriasValidas = Array.from(f.categoria.options).map(o => o.value).filter(Boolean);
+
+  const prompt = `Você é um especialista em vendas técnicas de serviços de assistência técnica de motores elétricos, ferramentas e eletrodomésticos (Elétrica Rocar).
+Analise o texto bruto abaixo, colado por um funcionário da oficina, e responda APENAS com um JSON válido (sem markdown, sem texto extra, sem crases), no formato exato:
+{"codigo":"...","titulo":"...","categoria":"...","marca":"...","preco":0,"descricao":"..."}
+
+Regras:
+- "codigo": se houver um código/referência no texto, use-o; senão gere um código curto plausível no padrão "SRV-XXX" (letras maiúsculas e números).
+- "titulo": nome técnico e comercial bem formatado do serviço/equipamento.
+- "categoria": escolha OBRIGATORIAMENTE um destes valores (exatamente como estão, minúsculas): ${categoriasValidas.join(', ')}.
+- "marca": marca do equipamento mencionada no texto; use "" se não houver.
+- "preco": número (apenas dígitos e ponto decimal, sem "R$" e sem separador de milhar). Se não houver preço no texto, estime um valor de mercado plausível.
+- "descricao": descrição comercial detalhada, técnica e atrativa, entre 50 e 80 palavras, em português do Brasil.
+
+Texto bruto:
+"""
+${raw}
+"""`;
+
+  try {
+    const json = await gerarJSONComGemini(prompt);
+
+    if (json.codigo) f.codigo.value = json.codigo;
+    if (json.titulo) f.titulo.value = json.titulo;
+    if (json.categoria && categoriasValidas.includes(json.categoria)) f.categoria.value = json.categoria;
+    if (json.marca) f.marca.value = json.marca;
+    if (json.preco !== undefined && json.preco !== null && json.preco !== '') f.preco.value = Number(json.preco);
+    if (json.descricao) f.descricao.value = json.descricao;
+
+    feedback.textContent = 'Código, título, categoria, marca, preço e descrição gerados com sucesso! Revise antes de salvar.';
     feedback.className = 'form-feedback ok';
   } catch (err) {
     console.error(err);

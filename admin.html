@@ -8,9 +8,9 @@
 <link rel="icon" href="assets/favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css?v=27">
+<link rel="stylesheet" href="assets/style.css?v=28">
 </head>
-<body style="background:var(--bg-alt);">
+<body class="admin-body">
 
 <div id="offline-notice" style="display:none;background:#111;color:#fff;padding:16px;text-align:center;font-size:.9rem;">
   ⚠️ O painel admin ainda não está conectado ao Supabase. Preencha <code>SUPABASE_URL</code> e
@@ -56,6 +56,13 @@
     <section class="admin-panel" id="panel-servicos">
       <h2 style="margin-bottom:20px;">Cadastro de Serviços</h2>
       <div class="form-card" style="margin-bottom:30px;">
+        <div class="ai-autofill-box">
+          <label for="servico-raw" class="ai-autofill-title">Preenchimento Automático por IA — cole informações brutas do produto/serviço</label>
+          <textarea id="servico-raw" rows="4" placeholder="Ex: Capacitor permanente 35uf 380v para motor elétrico monofásico, R$ 45,00..."></textarea>
+          <button type="button" id="servico-gerar-ia-btn" class="btn btn-primary btn-sm">Gerar com IA</button>
+          <p class="ai-hint">A IA preenche título/nome, categoria, aplicação, preço e a descrição completa.</p>
+          <p id="servico-ia-feedback" class="form-feedback"></p>
+        </div>
         <form id="servico-form">
           <input type="hidden" name="id" value="">
           <div class="form-row">
@@ -115,6 +122,13 @@
     <section class="admin-panel" id="panel-materiais" style="display:none;">
       <h2 style="margin-bottom:20px;">Materiais / Produtos</h2>
       <div class="form-card" style="margin-bottom:30px;">
+        <div class="ai-autofill-box">
+          <label for="material-raw" class="ai-autofill-title">Preenchimento Automático por IA — cole informações brutas do produto/serviço</label>
+          <textarea id="material-raw" rows="4" placeholder="Ex: Capacitor permanente 35uf 380v para motor elétrico monofásico, R$ 45,00..."></textarea>
+          <button type="button" id="material-gerar-ia-btn" class="btn btn-primary btn-sm">Gerar com IA</button>
+          <p class="ai-hint">A IA preenche título/nome, categoria, aplicação, preço e a descrição completa.</p>
+          <p id="material-ia-feedback" class="form-feedback"></p>
+        </div>
         <form id="material-form">
           <input type="hidden" name="id" value="">
           <div class="form-row">
@@ -140,12 +154,8 @@
             </div>
           </div>
           <div class="field">
-            <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
-              <span>Descrição</span>
-              <button type="button" id="material-gerar-desc-btn" class="btn btn-outline btn-sm" style="text-transform:none;letter-spacing:0;padding:6px 14px;font-size:.72rem;">✨ Gerar com IA</button>
-            </label>
+            <label>Descrição</label>
             <textarea name="descricao"></textarea>
-            <p id="material-desc-feedback" class="form-feedback" style="margin-top:6px;"></p>
           </div>
           <div class="form-row">
             <div class="field"><label>Preço (a partir de)</label><input type="number" step="0.01" name="preco" required></div>
