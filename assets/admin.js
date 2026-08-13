@@ -443,10 +443,44 @@ async function gerarJSONComGemini(prompt) {
 
   if (!textoBruto) throw new Error('Resposta vazia da IA.');
 
-  // Mesmo pedindo JSON puro, remove eventuais cercas de código como
-  // segurança extra antes do parse.
-  const limpo = textoBruto.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/```$/, '').trim();
-  return JSON.parse(limpo);
+  return parseJSONDaIA(textoBruto);
+}
+
+// Limpa e faz o parse do texto devolvido pelo Gemini. Mesmo pedindo
+// JSON puro, o modelo às vezes: (1) envolve a resposta em blocos de
+// código markdown (```json ... ```), (2) escreve algum texto antes/
+// depois do objeto, ou (3) usa quebras de linha "cruas" dentro de um
+// valor de string (ex: na descrição), o que quebra o JSON.parse com
+// erro de "Unterminated string". Tratamos os três casos aqui antes de
+// tentar o parse, e devolvemos um erro amigável se mesmo assim falhar.
+function parseJSONDaIA(textoBruto) {
+  // 1) Remove cercas de código markdown, se existirem.
+  let limpo = textoBruto.replace(/```json/gi, '').replace(/```/g, '').trim();
+
+  // 2) Extrai só o conteúdo entre a primeira '{' e a última '}',
+  // descartando qualquer texto explicativo que a IA tenha colocado
+  // antes ou depois do objeto JSON.
+  const inicio = limpo.indexOf('{');
+  const fim = limpo.lastIndexOf('}');
+  if (inicio !== -1 && fim !== -1 && fim > inicio) {
+    limpo = limpo.slice(inicio, fim + 1);
+  }
+
+  try {
+    return JSON.parse(limpo);
+  } catch (err1) {
+    // 3) Quebras de linha/tabs "crus" dentro dos valores de string
+    // (fora de aspas escapadas) invalidam o JSON. Como os campos aqui
+    // são só texto curto (nome, categoria, preço, descrição), é seguro
+    // trocar quebras de linha literais por espaço e tentar de novo.
+    const semQuebras = limpo.replace(/\r\n|\r|\n|\t/g, ' ');
+    try {
+      return JSON.parse(semQuebras);
+    } catch (err2) {
+      console.error('Falha ao interpretar JSON da IA:', err2, textoBruto);
+      throw new Error('A IA retornou um conteúdo em formato inesperado. Tente gerar novamente ou reescreva o texto colado de forma mais simples.');
+    }
+  }
 }
 
 async function handleGerarMaterialIA() {
@@ -470,7 +504,7 @@ async function handleGerarMaterialIA() {
   const aplicacoesValidas = Object.keys(LABELS_APLICACAO_MATERIAL);
 
   const prompt = `Você é um especialista em vendas técnicas de peças e materiais para assistência técnica de motores elétricos, ferramentas e eletrodomésticos (Elétrica Rocar).
-Analise o texto bruto abaixo, colado por um funcionário da oficina, e responda APENAS com um JSON válido (sem markdown, sem texto extra, sem crases), no formato exato:
+Analise o texto bruto abaixo, colado por um funcionário da oficina, e responda APENAS com um JSON puro e válido — sem blocos de código markdown (nada de \`\`\`), sem crases, sem nenhum texto antes ou depois do objeto, sem quebras de linha dentro dos valores de texto (escreva a descrição em uma única linha), no formato exato:
 {"codigo":"...","titulo":"...","categoria":"...","aplicacao":"...","preco":0,"descricao":"..."}
 
 Regras:
@@ -528,7 +562,7 @@ async function handleGerarServicoIA() {
   const categoriasValidas = Array.from(f.categoria.options).map(o => o.value).filter(Boolean);
 
   const prompt = `Você é um especialista em vendas técnicas de serviços de assistência técnica de motores elétricos, ferramentas e eletrodomésticos (Elétrica Rocar).
-Analise o texto bruto abaixo, colado por um funcionário da oficina, e responda APENAS com um JSON válido (sem markdown, sem texto extra, sem crases), no formato exato:
+Analise o texto bruto abaixo, colado por um funcionário da oficina, e responda APENAS com um JSON puro e válido — sem blocos de código markdown (nada de \`\`\`), sem crases, sem nenhum texto antes ou depois do objeto, sem quebras de linha dentro dos valores de texto (escreva a descrição em uma única linha), no formato exato:
 {"codigo":"...","titulo":"...","categoria":"...","marca":"...","preco":0,"descricao":"..."}
 
 Regras:
