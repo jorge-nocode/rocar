@@ -614,6 +614,17 @@ footer{background:var(--footer-bg);color:rgba(255,255,255,.8);padding:56px 0 24p
 .pay-icons{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
 .pay-icons svg{height:22px;width:auto;}
 
+/* Bandeiras de pagamento coloridas (igual à página de produto da QRV) */
+.payment-icons-mono{
+  display:flex;flex-wrap:nowrap;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:14px;
+  border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;
+}
+.payment-icons-mono::-webkit-scrollbar{display:none;}
+.pay-icon{flex:0 0 auto;border-radius:4px;}
+@media(max-width:480px){
+  .payment-icons-mono{flex-wrap:wrap;overflow-x:visible;row-gap:8px;}
+}
+
 /* ---------- Timeline (Quem Somos) ---------- */
 .timeline{position:relative;max-width:900px;margin:0 auto;padding-left:0;}
 .timeline::before{
