@@ -5,7 +5,7 @@
 // Só funciona depois que assets/supabase-client.js tiver a URL e a
 // chave anon reais preenchidas (ver supabase-setup.sql).
 // ===================================================================
-import { supabase, FOTOS_BUCKET, MATERIAIS_BUCKET, LABELS_CATEGORIA_MATERIAL, formatBRL, fetchConfig, salvarConfig } from './supabase-client.js';
+import { supabase, FOTOS_BUCKET, MATERIAIS_BUCKET, LABELS_CATEGORIA_MATERIAL, LABELS_APLICACAO_MATERIAL, formatBRL, fetchConfig, salvarConfig } from './supabase-client.js';
 
 const els = {
   offlineNotice: document.querySelector('#offline-notice'),
@@ -378,16 +378,20 @@ async function handleConfigSubmit(e) {
 }
 
 // ---------------------------------------------------------------
-// Geração de descrição de material com IA (Google Gemini). Usa a
-// mesma chave configurada na aba "Configurações" (tabela site_config,
-// chave 'chatbot_gemini_key') — a mesma estrutura de conexão já usada
-// pelo chat "Técnico Rocar".
+// Preenchimento automático do cadastro de material com IA (Google
+// Gemini). A chave da API NUNCA é digitada/guardada no navegador de
+// cada admin: ela fica salva uma única vez na tabela 'site_config' do
+// Supabase (chave 'chatbot_gemini_key', editável na aba
+// "Configurações") e é buscada via fetchConfig() a cada uso — assim
+// qualquer pessoa logada no painel, em qualquer computador, consegue
+// usar o botão "Gerar com IA" sem precisar configurar nada localmente.
 // ---------------------------------------------------------------
 const GEMINI_MODEL = 'gemini-2.5-flash';
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 async function handleGerarDescricaoIA() {
-  const nome = els.materialForm?.titulo?.value?.trim();
+  const f = els.materialForm;
+  const nome = f?.titulo?.value?.trim();
   const feedback = els.materialDescFeedback;
   if (!nome) {
     feedback.textContent = 'Preencha o Nome do produto primeiro.';
@@ -395,9 +399,11 @@ async function handleGerarDescricaoIA() {
     return;
   }
 
+  // Busca a chave sempre no Supabase (nunca localStorage/input local),
+  // garantindo que funcione em qualquer computador logado no admin.
   const key = await fetchConfig('chatbot_gemini_key');
   if (!key) {
-    feedback.textContent = 'Configure a chave da API do Gemini na aba "Configurações" primeiro.';
+    feedback.textContent = 'Nenhuma chave do Gemini configurada. Peça para salvar a chave na aba "Configurações" (ela vale para todos os admins).';
     feedback.className = 'form-feedback err';
     return;
   }
@@ -409,7 +415,18 @@ async function handleGerarDescricaoIA() {
   feedback.textContent = '';
   feedback.className = 'form-feedback';
 
-  const prompt = `Aja como um especialista em vendas técnicas e crie uma descrição vendedora, direta e profissional com cerca de 50 palavras para o seguinte produto: ${nome}`;
+  const categoriasValidas = Object.keys(LABELS_CATEGORIA_MATERIAL);
+  const aplicacoesValidas = Object.keys(LABELS_APLICACAO_MATERIAL);
+
+  const prompt = `Você é um especialista em vendas técnicas de peças e materiais para assistência técnica de motores elétricos, ferramentas e eletrodomésticos (Elétrica Rocar).
+Para o produto "${nome}", responda APENAS com um JSON válido (sem markdown, sem texto extra, sem crases), no formato exato:
+{"nome":"...","categoria":"...","aplicacao":"...","descricao":"..."}
+
+Regras:
+- "nome": nome técnico e comercial bem formatado do produto (pode ajustar/corrigir o texto digitado).
+- "categoria": escolha OBRIGATORIAMENTE um destes valores (a chave em minúsculas, sem acento): ${categoriasValidas.join(', ')}. Se nenhum encaixar perfeitamente, use o mais próximo.
+- "aplicacao": escolha OBRIGATORIAMENTE um destes valores: ${aplicacoesValidas.join(', ')}.
+- "descricao": descrição comercial detalhada, técnica e atrativa, entre 50 e 80 palavras, em português do Brasil.`;
 
   try {
     const resp = await fetch(`${GEMINI_URL}?key=${encodeURIComponent(key)}`, {
@@ -417,24 +434,43 @@ async function handleGerarDescricaoIA() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.7, maxOutputTokens: 220 }
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 400,
+          responseMimeType: 'application/json'
+        }
       })
     });
 
     if (!resp.ok) throw new Error(`Gemini respondeu ${resp.status}`);
 
     const data = await resp.json();
-    const texto = (data?.candidates?.[0]?.content?.parts || [])
+    const textoBruto = (data?.candidates?.[0]?.content?.parts || [])
       .map(p => p.text || '').join('').trim();
 
-    if (!texto) throw new Error('Resposta vazia da IA.');
+    if (!textoBruto) throw new Error('Resposta vazia da IA.');
 
-    els.materialForm.descricao.value = texto;
-    feedback.textContent = 'Descrição gerada com sucesso!';
+    // Mesmo pedindo JSON puro, remove eventuais cercas de código como
+    // segurança extra antes do parse.
+    const limpo = textoBruto.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/```$/, '').trim();
+    const json = JSON.parse(limpo);
+
+    if (json.nome) f.titulo.value = json.nome;
+    if (json.categoria && categoriasValidas.includes(json.categoria)) {
+      f.categoria.value = json.categoria;
+    } else if (json.categoria) {
+      f.categoria.value = json.categoria; // deixa preenchido mesmo fora da lista, pra revisão
+    }
+    if (json.aplicacao && aplicacoesValidas.includes(json.aplicacao)) {
+      f.aplicacao.value = json.aplicacao;
+    }
+    if (json.descricao) f.descricao.value = json.descricao;
+
+    feedback.textContent = 'Nome, categoria, aplicação e descrição gerados com sucesso!';
     feedback.className = 'form-feedback ok';
   } catch (err) {
     console.error(err);
-    feedback.textContent = 'Erro ao gerar descrição: ' + err.message;
+    feedback.textContent = 'Erro ao gerar com IA: ' + err.message;
     feedback.className = 'form-feedback err';
   } finally {
     btn.disabled = false;
