@@ -396,11 +396,8 @@ async function handleConfigSubmit(e) {
 // qualquer pessoa logada no painel, em qualquer computador, consegue
 // usar o botão "Gerar com IA" sem precisar configurar nada localmente.
 // ---------------------------------------------------------------
-// Lista de modelos a tentar, em ordem de preferência. O erro "Gemini
-// respondeu 404" acontece quando o modelo chamado não existe (ou não
-// está mais disponível) para a versão da API/chave em uso — por isso
-// tentamos vários nomes em sequência em vez de travar num só.
-const GEMINI_MODEL_CANDIDATES = ['gemini-1.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
+// Endpoint estável usado para todas as chamadas do "Gerar com IA".
+const GEMINI_URL_BASE = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
 // Chama o Gemini pedindo resposta em JSON puro (com responseSchema,
 // que força o modelo a devolver exatamente os campos pedidos mesmo
@@ -413,46 +410,23 @@ async function gerarJSONComGemini(prompt, responseSchema) {
     throw new Error('Nenhuma chave do Gemini configurada. Salve a chave na aba "Configurações" (ela vale para todos os admins).');
   }
 
-  let resp, data, lastErro;
-  for (const modelo of GEMINI_MODEL_CANDIDATES) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${encodeURIComponent(key)}`;
-    const generationConfig = {
-      temperature: 0.6,
-      // Tokens suficientes para o JSON completo (nome/título, categoria,
-      // aplicação/marca, preço e uma descrição de até ~80 palavras).
-      maxOutputTokens: 1024,
-      responseMimeType: 'application/json',
-      ...(responseSchema ? { responseSchema } : {})
-    };
-    // Modelos da família "2.5"/"latest" usam "thinking" (raciocínio
-    // interno) por padrão, e esses tokens de raciocínio saem do MESMO
-    // orçamento de maxOutputTokens — na prática isso consumia todo o
-    // limite e cortava o JSON pela metade, o que gerava o erro
-    // "conteúdo em formato inesperado". Desligamos o thinking para
-    // esses modelos, já que aqui só queremos uma extração direta.
-    if (/2\.5|latest/.test(modelo)) {
-      generationConfig.thinkingConfig = { thinkingBudget: 0 };
-    }
+  const resp = await fetch(`${GEMINI_URL_BASE}?key=${encodeURIComponent(key)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.2,
+        maxOutputTokens: 1000,
+        responseMimeType: 'application/json',
+        ...(responseSchema ? { responseSchema } : {})
+      }
+    })
+  });
 
-    resp = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig
-      })
-    });
+  if (!resp.ok) throw new Error(`Gemini respondeu ${resp.status}`);
 
-    if (resp.ok) { data = await resp.json(); lastErro = null; break; }
-
-    lastErro = new Error(`Gemini respondeu ${resp.status} para o modelo "${modelo}"`);
-    // Só tenta o próximo modelo se o erro for "modelo não encontrado/indisponível";
-    // outros erros (ex: chave inválida) já param a tentativa aqui.
-    if (resp.status !== 404) break;
-  }
-
-  if (lastErro) throw lastErro;
-
+  const data = await resp.json();
   const candidato = data?.candidates?.[0];
   const textoBruto = (candidato?.content?.parts || [])
     .map(p => p.text || '').join('').trim();
