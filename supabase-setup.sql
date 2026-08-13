@@ -1,6 +1,9 @@
 -- ===================================================================
 -- ELÉTRICA ROCAR — supabase-setup.sql
--- Rode este script UMA VEZ no SQL Editor do seu projeto Supabase.
+-- Rode este script no SQL Editor do seu projeto Supabase. Pode rodar
+-- quantas vezes precisar (é seguro/idempotente): tabelas usam
+-- "if not exists", buckets usam "on conflict do nothing" e as políticas
+-- são recriadas com "drop policy if exists" antes de cada "create policy".
 -- Depois cole a URL do projeto e a chave anon em assets/supabase-client.js
 -- ===================================================================
 
@@ -117,41 +120,55 @@ alter table public.materiais enable row level security;
 -- Sugestão: eletricarocar@gmail.com
 
 -- Leitura pública: só serviços ativos
+drop policy if exists "publico le servicos ativos" on public.servicos;
 create policy "publico le servicos ativos" on public.servicos
   for select using (status = 'ativo');
 
 -- Gestão total: só o e-mail autorizado
+drop policy if exists "admin gerencia servicos" on public.servicos;
 create policy "admin gerencia servicos" on public.servicos
   for all using (auth.jwt() ->> 'email' = 'eletricarocar@gmail.com')
   with check (auth.jwt() ->> 'email' = 'eletricarocar@gmail.com');
 
 -- Qualquer visitante pode enviar mensagens/solicitações (insert público)
+drop policy if exists "publico envia contato" on public.mensagens_contato;
 create policy "publico envia contato" on public.mensagens_contato
   for insert with check (true);
+drop policy if exists "admin le contato" on public.mensagens_contato;
 create policy "admin le contato" on public.mensagens_contato
   for select using (auth.jwt() ->> 'email' = 'eletricarocar@gmail.com');
+drop policy if exists "admin atualiza contato" on public.mensagens_contato;
 create policy "admin atualiza contato" on public.mensagens_contato
   for update using (auth.jwt() ->> 'email' = 'eletricarocar@gmail.com');
 
+drop policy if exists "publico envia orcamento" on public.solicitacoes_orcamento;
 create policy "publico envia orcamento" on public.solicitacoes_orcamento
   for insert with check (true);
+drop policy if exists "admin le orcamento" on public.solicitacoes_orcamento;
 create policy "admin le orcamento" on public.solicitacoes_orcamento
   for select using (auth.jwt() ->> 'email' = 'eletricarocar@gmail.com');
+drop policy if exists "admin atualiza orcamento" on public.solicitacoes_orcamento;
 create policy "admin atualiza orcamento" on public.solicitacoes_orcamento
   for update using (auth.jwt() ->> 'email' = 'eletricarocar@gmail.com');
 
+drop policy if exists "publico envia empresa" on public.solicitacoes_empresa;
 create policy "publico envia empresa" on public.solicitacoes_empresa
   for insert with check (true);
+drop policy if exists "admin le empresa" on public.solicitacoes_empresa;
 create policy "admin le empresa" on public.solicitacoes_empresa
   for select using (auth.jwt() ->> 'email' = 'eletricarocar@gmail.com');
+drop policy if exists "admin atualiza empresa" on public.solicitacoes_empresa;
 create policy "admin atualiza empresa" on public.solicitacoes_empresa
   for update using (auth.jwt() ->> 'email' = 'eletricarocar@gmail.com');
 
+drop policy if exists "publico assina newsletter" on public.newsletter;
 create policy "publico assina newsletter" on public.newsletter
   for insert with check (true);
+drop policy if exists "admin le newsletter" on public.newsletter;
 create policy "admin le newsletter" on public.newsletter
   for select using (auth.jwt() ->> 'email' = 'eletricarocar@gmail.com');
 
+drop policy if exists "admin gerencia config" on public.site_config;
 create policy "admin gerencia config" on public.site_config
   for all using (auth.jwt() ->> 'email' = 'eletricarocar@gmail.com')
   with check (auth.jwt() ->> 'email' = 'eletricarocar@gmail.com');
@@ -163,14 +180,17 @@ create policy "admin gerencia config" on public.site_config
 -- assim como aconteceria com qualquer chamada direta client-side a uma
 -- API de IA. Para reduzir o risco, use uma chave do Gemini com cota/uso
 -- limitado e restrição por domínio (HTTP referrer) no Google AI Studio.
+drop policy if exists "publico le chave do chatbot" on public.site_config;
 create policy "publico le chave do chatbot" on public.site_config
   for select using (chave = 'chatbot_gemini_key');
 
 -- Leitura pública: só materiais ativos
+drop policy if exists "publico le materiais ativos" on public.materiais;
 create policy "publico le materiais ativos" on public.materiais
   for select using (status = 'ativo');
 
 -- Gestão total: só o e-mail autorizado
+drop policy if exists "admin gerencia materiais" on public.materiais;
 create policy "admin gerencia materiais" on public.materiais
   for all using (auth.jwt() ->> 'email' = 'eletricarocar@gmail.com')
   with check (auth.jwt() ->> 'email' = 'eletricarocar@gmail.com');
@@ -182,12 +202,15 @@ insert into storage.buckets (id, name, public)
 values ('servicos-fotos', 'servicos-fotos', true)
 on conflict (id) do nothing;
 
+drop policy if exists "leitura publica fotos" on storage.objects;
 create policy "leitura publica fotos" on storage.objects
   for select using (bucket_id = 'servicos-fotos');
 
+drop policy if exists "admin upload fotos" on storage.objects;
 create policy "admin upload fotos" on storage.objects
   for insert with check (bucket_id = 'servicos-fotos' and auth.jwt() ->> 'email' = 'eletricarocar@gmail.com');
 
+drop policy if exists "admin remove fotos" on storage.objects;
 create policy "admin remove fotos" on storage.objects
   for delete using (bucket_id = 'servicos-fotos' and auth.jwt() ->> 'email' = 'eletricarocar@gmail.com');
 
@@ -198,11 +221,14 @@ insert into storage.buckets (id, name, public)
 values ('materiais-fotos', 'materiais-fotos', true)
 on conflict (id) do nothing;
 
+drop policy if exists "leitura publica fotos materiais" on storage.objects;
 create policy "leitura publica fotos materiais" on storage.objects
   for select using (bucket_id = 'materiais-fotos');
 
+drop policy if exists "admin upload fotos materiais" on storage.objects;
 create policy "admin upload fotos materiais" on storage.objects
   for insert with check (bucket_id = 'materiais-fotos' and auth.jwt() ->> 'email' = 'eletricarocar@gmail.com');
 
+drop policy if exists "admin remove fotos materiais" on storage.objects;
 create policy "admin remove fotos materiais" on storage.objects
   for delete using (bucket_id = 'materiais-fotos' and auth.jwt() ->> 'email' = 'eletricarocar@gmail.com');
