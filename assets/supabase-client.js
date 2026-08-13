@@ -1,15 +1,15 @@
 // ===================================================================
 // ELÉTRICA ROCAR — supabase-client.js
 // Client central do Supabase + funções de acesso a dados.
-// Troque SUPABASE_URL e SUPABASE_ANON_KEY pelas credenciais reais
-// (Supabase > Project Settings > API) quando o projeto for criado.
-// Até lá, o site funciona com DADOS_EXEMPLO abaixo (modo offline).
+// Projeto Supabase real conectado (conta santana.basp@gmail.com).
+// A biblioteca @supabase/supabase-js é carregada via CDN (esm.sh) direto
+// no import abaixo — não precisa de <script> extra no HTML.
 // ===================================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-export const SUPABASE_URL = 'COLE_AQUI_A_URL_DO_SEU_PROJETO_SUPABASE';
-export const SUPABASE_ANON_KEY = 'COLE_AQUI_A_CHAVE_ANON_PUBLICA';
+export const SUPABASE_URL = 'https://kwifszpmjchzamcnmjgs.supabase.co';
+export const SUPABASE_ANON_KEY = 'sb_publishable_co2e0iGKlFayRhRAOipNxg_35kq7Oph';
 
 const SUPABASE_CONFIGURADO =
   !SUPABASE_URL.includes('COLE_AQUI') && !SUPABASE_ANON_KEY.includes('COLE_AQUI');
