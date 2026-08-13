@@ -396,32 +396,46 @@ async function handleConfigSubmit(e) {
 // qualquer pessoa logada no painel, em qualquer computador, consegue
 // usar o botão "Gerar com IA" sem precisar configurar nada localmente.
 // ---------------------------------------------------------------
-const GEMINI_MODEL = 'gemini-2.5-flash';
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+// Lista de modelos a tentar, em ordem de preferência. O erro "Gemini
+// respondeu 404" acontece quando o modelo chamado não existe (ou não
+// está mais disponível) para a versão da API/chave em uso — por isso
+// tentamos vários nomes em sequência em vez de travar num só.
+const GEMINI_MODEL_CANDIDATES = ['gemini-1.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 
 // Chama o Gemini pedindo resposta em JSON puro e devolve o objeto já
 // parseado. Lança erro se não houver chave configurada, se a API
 // falhar ou se a resposta não for um JSON válido.
 async function gerarJSONComGemini(prompt) {
-  const key = await fetchConfig('chatbot_gemini_key');
+  const key = (await fetchConfig('chatbot_gemini_key') || '').trim();
   if (!key) {
     throw new Error('Nenhuma chave do Gemini configurada. Salve a chave na aba "Configurações" (ela vale para todos os admins).');
   }
 
-  const resp = await fetch(`${GEMINI_URL}?key=${encodeURIComponent(key)}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.6,
-        maxOutputTokens: 500,
-        responseMimeType: 'application/json'
-      }
-    })
-  });
+  let resp, lastErro;
+  for (const modelo of GEMINI_MODEL_CANDIDATES) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${encodeURIComponent(key)}`;
+    resp = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.6,
+          maxOutputTokens: 500,
+          responseMimeType: 'application/json'
+        }
+      })
+    });
 
-  if (!resp.ok) throw new Error(`Gemini respondeu ${resp.status}`);
+    if (resp.ok) { lastErro = null; break; }
+
+    lastErro = new Error(`Gemini respondeu ${resp.status} para o modelo "${modelo}"`);
+    // Só tenta o próximo modelo se o erro for "modelo não encontrado/indisponível";
+    // outros erros (ex: chave inválida) já param a tentativa aqui.
+    if (resp.status !== 404) break;
+  }
+
+  if (lastErro) throw lastErro;
 
   const data = await resp.json();
   const textoBruto = (data?.candidates?.[0]?.content?.parts || [])
