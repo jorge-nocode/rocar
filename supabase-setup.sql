@@ -112,6 +112,12 @@ create table if not exists public.site_config (
   valor text
 );
 
+-- Limpeza: remove a chave do Gemini que porventura já esteja salva em
+-- texto puro na tabela (versões antigas do admin salvavam aqui). A partir
+-- de agora a chave só existe como secret da Edge Function "gemini-proxy"
+-- (configurada via `supabase secrets set GEMINI_API_KEY=...`).
+delete from public.site_config where chave = 'chatbot_gemini_key';
+
 -- ===================================================================
 -- RLS (Row Level Security)
 -- ===================================================================
@@ -148,6 +154,9 @@ create policy "admin le contato" on public.mensagens_contato
 drop policy if exists "admin atualiza contato" on public.mensagens_contato;
 create policy "admin atualiza contato" on public.mensagens_contato
   for update using (auth.jwt() ->> 'email' in ('santanadds92@gmail.com', 'eletricarocar@gmail.com'));
+drop policy if exists "admin remove contato" on public.mensagens_contato;
+create policy "admin remove contato" on public.mensagens_contato
+  for delete using (auth.jwt() ->> 'email' in ('santanadds92@gmail.com', 'eletricarocar@gmail.com'));
 
 drop policy if exists "publico envia orcamento" on public.solicitacoes_orcamento;
 create policy "publico envia orcamento" on public.solicitacoes_orcamento
@@ -158,6 +167,9 @@ create policy "admin le orcamento" on public.solicitacoes_orcamento
 drop policy if exists "admin atualiza orcamento" on public.solicitacoes_orcamento;
 create policy "admin atualiza orcamento" on public.solicitacoes_orcamento
   for update using (auth.jwt() ->> 'email' in ('santanadds92@gmail.com', 'eletricarocar@gmail.com'));
+drop policy if exists "admin remove orcamento" on public.solicitacoes_orcamento;
+create policy "admin remove orcamento" on public.solicitacoes_orcamento
+  for delete using (auth.jwt() ->> 'email' in ('santanadds92@gmail.com', 'eletricarocar@gmail.com'));
 
 drop policy if exists "publico envia empresa" on public.solicitacoes_empresa;
 create policy "publico envia empresa" on public.solicitacoes_empresa
@@ -168,6 +180,9 @@ create policy "admin le empresa" on public.solicitacoes_empresa
 drop policy if exists "admin atualiza empresa" on public.solicitacoes_empresa;
 create policy "admin atualiza empresa" on public.solicitacoes_empresa
   for update using (auth.jwt() ->> 'email' in ('santanadds92@gmail.com', 'eletricarocar@gmail.com'));
+drop policy if exists "admin remove empresa" on public.solicitacoes_empresa;
+create policy "admin remove empresa" on public.solicitacoes_empresa
+  for delete using (auth.jwt() ->> 'email' in ('santanadds92@gmail.com', 'eletricarocar@gmail.com'));
 
 drop policy if exists "publico assina newsletter" on public.newsletter;
 create policy "publico assina newsletter" on public.newsletter
@@ -175,22 +190,22 @@ create policy "publico assina newsletter" on public.newsletter
 drop policy if exists "admin le newsletter" on public.newsletter;
 create policy "admin le newsletter" on public.newsletter
   for select using (auth.jwt() ->> 'email' in ('santanadds92@gmail.com', 'eletricarocar@gmail.com'));
+drop policy if exists "admin remove newsletter" on public.newsletter;
+create policy "admin remove newsletter" on public.newsletter
+  for delete using (auth.jwt() ->> 'email' in ('santanadds92@gmail.com', 'eletricarocar@gmail.com'));
 
+-- site_config: 100% restrita a admins (select/insert/update/delete).
+-- A chave do Gemini (chatbot_gemini_key) NÃO é mais lida pelo navegador:
+-- a chamada à API do Gemini agora passa pela Edge Function "gemini-proxy",
+-- que lê a chave como secret do próprio ambiente do Supabase (nunca do
+-- banco). Por isso não existe mais nenhuma policy de leitura pública
+-- aqui — nem para essa chave nem para qualquer outra futura entrada
+-- desta tabela.
+drop policy if exists "publico le chave do chatbot" on public.site_config;
 drop policy if exists "admin gerencia config" on public.site_config;
 create policy "admin gerencia config" on public.site_config
   for all using (auth.jwt() ->> 'email' in ('santanadds92@gmail.com', 'eletricarocar@gmail.com'))
   with check (auth.jwt() ->> 'email' in ('santanadds92@gmail.com', 'eletricarocar@gmail.com'));
-
--- Leitura pública apenas da chave do chatbot (o widget roda no navegador
--- do visitante e precisa ler essa chave para chamar a API do Gemini).
--- ATENÇÃO: como o site é 100% estático (sem backend próprio), essa chave
--- fica visível no tráfego de rede do navegador de qualquer visitante,
--- assim como aconteceria com qualquer chamada direta client-side a uma
--- API de IA. Para reduzir o risco, use uma chave do Gemini com cota/uso
--- limitado e restrição por domínio (HTTP referrer) no Google AI Studio.
-drop policy if exists "publico le chave do chatbot" on public.site_config;
-create policy "publico le chave do chatbot" on public.site_config
-  for select using (chave = 'chatbot_gemini_key');
 
 -- Leitura pública: só materiais ativos
 drop policy if exists "publico le materiais ativos" on public.materiais;

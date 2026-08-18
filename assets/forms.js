@@ -23,18 +23,79 @@ function setFeedback(form, msg, ok) {
   fb.className = 'form-feedback ' + (ok ? 'ok' : 'err');
 }
 
+// ---------------------------------------------------------------
+// Anti-spam: honeypot + rate limiting simples, sem depender de nenhum
+// serviço externo de captcha.
+//
+// 1) Honeypot: cada form ganha (via CSS, injetado abaixo) um campo
+//    escondido que só um robô preencheria. Se vier preenchido, a gente
+//    finge que deu certo (pra não avisar o bot) mas não envia nada.
+// 2) Rate limit: guardamos no localStorage o horário do último envio
+//    de cada form neste navegador e bloqueamos reenvios do mesmo form
+//    por 2 minutos.
+// ---------------------------------------------------------------
+const HONEYPOT_FIELD = 'website';
+const RATE_LIMIT_MS = 2 * 60 * 1000; // 2 minutos
+const RATE_LIMIT_PREFIX = 'rocarUltimoEnvio_';
+
+function garantirHoneypot(form) {
+  if (form.querySelector(`input[name="${HONEYPOT_FIELD}"]`)) return;
+  const campo = document.createElement('input');
+  campo.type = 'text';
+  campo.name = HONEYPOT_FIELD;
+  campo.autocomplete = 'off';
+  campo.tabIndex = -1;
+  campo.setAttribute('aria-hidden', 'true');
+  campo.className = 'form-honeypot';
+  form.appendChild(campo);
+}
+
+function tempoRestanteRateLimit(formId) {
+  try {
+    const ultimo = Number(localStorage.getItem(RATE_LIMIT_PREFIX + formId) || 0);
+    const passou = Date.now() - ultimo;
+    return passou < RATE_LIMIT_MS ? RATE_LIMIT_MS - passou : 0;
+  } catch (e) {
+    return 0; // localStorage indisponível — não bloqueia o envio.
+  }
+}
+
+function registrarEnvio(formId) {
+  try { localStorage.setItem(RATE_LIMIT_PREFIX + formId, String(Date.now())); } catch (e) { /* ignora */ }
+}
+
 async function handleSubmit(form, fn, buildWhats, successMsg) {
+  garantirHoneypot(form);
+  const formId = form.id || 'form';
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+
+    // Honeypot preenchido = bot. Finge sucesso silenciosamente.
+    const honeypotValor = form.querySelector(`input[name="${HONEYPOT_FIELD}"]`)?.value;
+    if (honeypotValor) {
+      form.reset();
+      return;
+    }
+
+    const restante = tempoRestanteRateLimit(formId);
+    if (restante > 0) {
+      const minutos = Math.ceil(restante / 60000);
+      setFeedback(form, `Você já enviou uma mensagem recentemente. Tente novamente em ${minutos} minuto(s).`, false);
+      return;
+    }
+
     const btn = form.querySelector('button[type="submit"]');
     const original = btn.textContent;
     btn.disabled = true;
     btn.textContent = 'Enviando...';
 
     const data = Object.fromEntries(new FormData(form).entries());
+    delete data[HONEYPOT_FIELD];
     const result = await fn(data);
 
     if (result.ok) {
+      registrarEnvio(formId);
       btn.textContent = 'Enviado ✓';
       setFeedback(form, successMsg, true);
       form.reset();

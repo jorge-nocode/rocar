@@ -282,25 +282,6 @@ export async function fetchServicoByCodigo(codigo) {
 }
 
 // ---------------------------------------------------------------
-// Configuração chave/valor (ex: chave da API do Gemini do chatbot)
-// Tabela public.site_config (chave text primary key, valor text).
-// Em modo offline (Supabase não configurado) retorna null.
-// ---------------------------------------------------------------
-export async function fetchConfig(chave) {
-  if (!supabase) return null;
-  const { data, error } = await supabase.from('site_config').select('valor').eq('chave', chave).maybeSingle();
-  if (error) { console.error(error); return null; }
-  return data?.valor || null;
-}
-
-export async function salvarConfig(chave, valor) {
-  if (!supabase) return { ok: false, offline: true };
-  const { error } = await supabase.from('site_config').upsert({ chave, valor });
-  if (error) { console.error(error); return { ok: false, error }; }
-  return { ok: true };
-}
-
-// ---------------------------------------------------------------
 // Formulários públicos
 // ---------------------------------------------------------------
 async function inserirOuLog(tabela, payload) {

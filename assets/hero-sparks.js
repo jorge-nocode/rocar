@@ -161,6 +161,12 @@
   garantirParticulas();
   iniciar();
 
+  // Este script roda uma única vez por carregamento de página (é uma
+  // IIFE, não uma função reutilizável/instanciável), então o listener de
+  // resize abaixo é registrado exatamente uma vez por página — não há
+  // risco de acúmulo de listeners mesmo em navegação single-page, já que
+  // este site não faz SPA routing (cada página é um load completo, que
+  // descarta todo o estado de JS anterior, incluindo listeners antigos).
   window.addEventListener('resize', redimensionar);
 
   document.addEventListener('visibilitychange', () => {

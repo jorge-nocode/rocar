@@ -5,7 +5,23 @@
 // Só funciona depois que assets/supabase-client.js tiver a URL e a
 // chave anon reais preenchidas (ver supabase-setup.sql).
 // ===================================================================
-import { supabase, FOTOS_BUCKET, MATERIAIS_BUCKET, LABELS_CATEGORIA_MATERIAL, LABELS_APLICACAO_MATERIAL, formatBRL, fetchConfig, salvarConfig } from './supabase-client.js';
+import { supabase, FOTOS_BUCKET, MATERIAIS_BUCKET, LABELS_CATEGORIA_MATERIAL, LABELS_APLICACAO_MATERIAL, formatBRL } from './supabase-client.js';
+
+// ---------------------------------------------------------------
+// Sanitização contra XSS: qualquer texto vindo de formulários públicos
+// ou do banco (nome, mensagem, telefone, etc.) passa por aqui antes de
+// ser injetado via innerHTML nas tabelas do painel. Nunca confiamos em
+// dado de usuário como HTML puro.
+// ---------------------------------------------------------------
+function escapeHTML(valor) {
+  if (valor === null || valor === undefined) return '';
+  return String(valor)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 const els = {
   offlineNotice: document.querySelector('#offline-notice'),
@@ -24,9 +40,6 @@ const els = {
   servicoForm: document.querySelector('#servico-form'),
   servicoFeedback: document.querySelector('#servico-feedback'),
   fotosInput: document.querySelector('#servico-fotos'),
-  configForm: document.querySelector('#config-form'),
-  configFeedback: document.querySelector('#config-feedback'),
-  geminiKeyInput: document.querySelector('#gemini-key'),
   materiaisTableBody: document.querySelector('#materiais-tbody'),
   materialForm: document.querySelector('#material-form'),
   materialFeedback: document.querySelector('#material-feedback'),
@@ -76,10 +89,6 @@ async function initAdmin() {
     els.servicoForm.addEventListener('submit', handleServicoSubmit);
   }
 
-  if (els.configForm) {
-    els.configForm.addEventListener('submit', handleConfigSubmit);
-  }
-
   if (els.materialForm) {
     els.materialForm.addEventListener('submit', handleMaterialSubmit);
   }
@@ -108,7 +117,6 @@ function toggleAuthUI(session) {
     loadOrcamentos();
     loadContato();
     loadEmpresa();
-    loadConfig();
     loadMateriais();
   }
 }
@@ -131,14 +139,14 @@ async function loadServicos() {
   if (error) { console.error(error); return; }
   els.servicosTableBody.innerHTML = (data || []).map(s => `
     <tr>
-      <td>${s.codigo}</td>
-      <td>${s.titulo}</td>
-      <td>${s.categoria}</td>
+      <td>${escapeHTML(s.codigo)}</td>
+      <td>${escapeHTML(s.titulo)}</td>
+      <td>${escapeHTML(s.categoria)}</td>
       <td>${s.preco ? formatBRL(s.preco) : 'Sob orçamento'}</td>
-      <td>${s.status}</td>
+      <td>${escapeHTML(s.status)}</td>
       <td>
-        <button class="btn btn-outline btn-sm" data-edit="${s.id}">Editar</button>
-        <button class="btn btn-sm" data-del="${s.id}" style="color:#E30613;background:none;">Excluir</button>
+        <button class="btn btn-outline btn-sm" data-edit="${escapeHTML(s.id)}">Editar</button>
+        <button class="btn btn-sm" data-del="${escapeHTML(s.id)}" style="color:#E30613;background:none;">Excluir</button>
       </td>
     </tr>
   `).join('');
@@ -230,12 +238,12 @@ async function loadOrcamentos() {
   const { data } = await supabase.from('solicitacoes_orcamento').select('*').order('created_at', { ascending: false });
   els.orcamentosTableBody.innerHTML = (data || []).map(o => `
     <tr>
-      <td>${new Date(o.created_at).toLocaleDateString('pt-BR')}</td>
-      <td>${o.nome}</td>
-      <td>${o.telefone}</td>
-      <td>${o.tipo_equipamento || '-'}</td>
-      <td>${o.problema || '-'}</td>
-      <td>${o.status}</td>
+      <td>${escapeHTML(new Date(o.created_at).toLocaleDateString('pt-BR'))}</td>
+      <td>${escapeHTML(o.nome)}</td>
+      <td>${escapeHTML(o.telefone)}</td>
+      <td>${escapeHTML(o.tipo_equipamento || '-')}</td>
+      <td>${escapeHTML(o.problema || '-')}</td>
+      <td>${escapeHTML(o.status)}</td>
     </tr>
   `).join('');
 }
@@ -245,10 +253,10 @@ async function loadContato() {
   const { data } = await supabase.from('mensagens_contato').select('*').order('created_at', { ascending: false });
   els.contatoTableBody.innerHTML = (data || []).map(m => `
     <tr>
-      <td>${new Date(m.created_at).toLocaleDateString('pt-BR')}</td>
-      <td>${m.nome}</td>
-      <td>${m.telefone || m.email || '-'}</td>
-      <td>${m.mensagem}</td>
+      <td>${escapeHTML(new Date(m.created_at).toLocaleDateString('pt-BR'))}</td>
+      <td>${escapeHTML(m.nome)}</td>
+      <td>${escapeHTML(m.telefone || m.email || '-')}</td>
+      <td>${escapeHTML(m.mensagem)}</td>
     </tr>
   `).join('');
 }
@@ -258,10 +266,10 @@ async function loadEmpresa() {
   const { data } = await supabase.from('solicitacoes_empresa').select('*').order('created_at', { ascending: false });
   els.empresaTableBody.innerHTML = (data || []).map(e => `
     <tr>
-      <td>${new Date(e.created_at).toLocaleDateString('pt-BR')}</td>
-      <td>${e.empresa}</td>
-      <td>${e.telefone}</td>
-      <td>${e.segmento || '-'}</td>
+      <td>${escapeHTML(new Date(e.created_at).toLocaleDateString('pt-BR'))}</td>
+      <td>${escapeHTML(e.empresa)}</td>
+      <td>${escapeHTML(e.telefone)}</td>
+      <td>${escapeHTML(e.segmento || '-')}</td>
     </tr>
   `).join('');
 }
@@ -272,14 +280,14 @@ async function loadMateriais() {
   if (error) { console.error(error); return; }
   els.materiaisTableBody.innerHTML = (data || []).map(m => `
     <tr>
-      <td>${m.codigo}</td>
-      <td>${m.titulo}</td>
-      <td>${LABELS_CATEGORIA_MATERIAL[m.categoria] || m.categoria}</td>
+      <td>${escapeHTML(m.codigo)}</td>
+      <td>${escapeHTML(m.titulo)}</td>
+      <td>${escapeHTML(LABELS_CATEGORIA_MATERIAL[m.categoria] || m.categoria)}</td>
       <td>${formatBRL(m.preco)}</td>
-      <td>${m.status}</td>
+      <td>${escapeHTML(m.status)}</td>
       <td>
-        <button class="btn btn-outline btn-sm" data-edit="${m.id}">Editar</button>
-        <button class="btn btn-sm" data-del="${m.id}" style="color:#E30613;background:none;">Excluir</button>
+        <button class="btn btn-outline btn-sm" data-edit="${escapeHTML(m.id)}">Editar</button>
+        <button class="btn btn-sm" data-del="${escapeHTML(m.id)}" style="color:#E30613;background:none;">Excluir</button>
       </td>
     </tr>
   `).join('');
@@ -366,98 +374,45 @@ async function uploadFotosMaterial(fileList) {
   return urls;
 }
 
-async function loadConfig() {
-  if (!els.geminiKeyInput) return;
-  const valor = await fetchConfig('chatbot_gemini_key');
-  els.geminiKeyInput.value = valor || '';
-}
-
-async function handleConfigSubmit(e) {
-  e.preventDefault();
-  const valor = els.geminiKeyInput.value.trim();
-  const { ok, error } = await salvarConfig('chatbot_gemini_key', valor);
-  if (ok) {
-    els.configFeedback.textContent = 'Chave salva com sucesso!';
-    els.configFeedback.className = 'form-feedback ok';
-  } else {
-    els.configFeedback.textContent = 'Erro ao salvar: ' + (error?.message || 'tente novamente.');
-    els.configFeedback.className = 'form-feedback err';
-  }
-}
-
 // ---------------------------------------------------------------
 // Preenchimento automático COMPLETO do cadastro (Materiais e Serviços)
 // com IA (Google Gemini), a partir de um texto bruto colado pelo
 // usuário na caixa "Preenchimento Automático por IA" no topo de cada
-// formulário. A chave da API NUNCA é digitada/guardada no navegador de
-// cada admin: fica salva uma única vez na tabela 'site_config' do
-// Supabase (chave 'chatbot_gemini_key', editável na aba
-// "Configurações") e é buscada via fetchConfig() a cada uso — assim
-// qualquer pessoa logada no painel, em qualquer computador, consegue
-// usar o botão "Gerar com IA" sem precisar configurar nada localmente.
+// formulário.
+//
+// SEGURANÇA: a chave da API do Gemini NUNCA fica no navegador — nem
+// digitada, nem salva em tabela, nem em variável JS. A chamada real ao
+// Google é feita pela Supabase Edge Function "gemini-proxy"
+// (ver supabase/functions/gemini-proxy/index.ts), que guarda a chave
+// como secret no ambiente do servidor. Este arquivo só invoca essa
+// function autenticado (supabase.functions.invoke já envia o JWT da
+// sessão do admin logado), e a function valida no servidor que quem
+// chamou é um dos e-mails de admin autorizados antes de usar a chave.
 // ---------------------------------------------------------------
-// Estrutura de chamada IDÊNTICA à usada no projeto QRV Artigos Táticos
-// (assets/gemini-ai.js), que já funciona em produção com a mesma
-// chave do AI Studio. Isso descarta de vez qualquer diferença de
-// endpoint/payload/headers como causa do 404 — se essa chave funciona
-// lá com essa estrutura, funciona aqui.
-const GEMINI_MODEL_CANDIDATES = ['gemini-flash-latest', 'gemini-2.5-flash', 'gemini-3.6-flash'];
 
-// Chama o Gemini pedindo resposta em JSON e devolve o texto bruto
-// (ainda não parseado). Tenta cada modelo da lista em sequência,
-// pulando para o próximo só quando o erro indica que o modelo não
-// existe/não está mais disponível — igual ao comportamento da QRV.
-async function callGemini(apiKey, prompt) {
-  let lastError;
-  for (const model of GEMINI_MODEL_CANDIDATES) {
-    try {
-      const resp = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: {
-              responseMimeType: 'application/json',
-              temperature: 0.5,
-              maxOutputTokens: 4096,
-            },
-          }),
-        }
-      );
-      const data = await resp.json();
-      if (!resp.ok) {
-        lastError = new Error(data.error?.message || `Erro na API do Gemini (modelo ${model})`);
-        const msg = (data.error?.message || '').toLowerCase();
-        if (msg.includes('not found') || msg.includes('not supported') || msg.includes('no longer available') || msg.includes('deprecated')) {
-          continue;
-        }
-        throw lastError;
-      }
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!text) {
-        lastError = new Error('A IA não retornou nenhum conteúdo.');
-        continue;
-      }
-      return text;
-    } catch (err) {
-      lastError = err;
-    }
+// Chama a Edge Function "gemini-proxy" e devolve o texto bruto retornado
+// pelo Gemini (ainda não parseado).
+async function callGeminiProxy(prompt) {
+  const { data, error } = await supabase.functions.invoke('gemini-proxy', {
+    body: { prompt },
+  });
+  if (error) {
+    throw new Error('Falha ao chamar a IA: ' + error.message);
   }
-  throw lastError || new Error('Nenhum modelo do Gemini respondeu.');
+  if (data?.error) {
+    throw new Error(data.error);
+  }
+  if (!data?.text) {
+    throw new Error('A IA não retornou nenhum conteúdo.');
+  }
+  return data.text;
 }
 
-// Une as duas etapas: chama o Gemini e já devolve o JSON parseado
-// (com o mesmo tratamento de markdown/quebras de linha de segurança
-// que já tínhamos, caso o texto não venha 100% limpo).
+// Une as duas etapas: chama a IA (via Edge Function) e já devolve o JSON
+// parseado (com o mesmo tratamento de markdown/quebras de linha de
+// segurança que já tínhamos, caso o texto não venha 100% limpo).
 async function gerarJSONComGemini(prompt) {
-  const key = (await fetchConfig('chatbot_gemini_key') || '').trim();
-  if (!key) {
-    throw new Error('Nenhuma chave do Gemini configurada. Salve a chave na aba "Configurações" (ela vale para todos os admins).');
-  }
-
-  const textoBruto = await callGemini(key, prompt);
+  const textoBruto = await callGeminiProxy(prompt);
   return parseJSONDaIA(textoBruto);
 }
 

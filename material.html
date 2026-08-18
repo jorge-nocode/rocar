@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css?v=41">
+<link rel="stylesheet" href="assets/style.css?v=42">
 </head>
 <body>
 <script>try{if(localStorage.getItem("rocarTheme")!=="light")document.body.classList.add("dark-mode");}catch(e){}</script>
@@ -172,7 +172,7 @@
   <div class="container">
     <div class="footer-grid">
       <div>
-        <div class="footer-logo"><img src="assets/logo.png" alt="Elétrica Rocar"><strong>Elétrica Rocar</strong></div>
+        <div class="footer-logo"><img src="assets/logo.png" alt="Elétrica Rocar" loading="lazy"><strong>Elétrica Rocar</strong></div>
         <p style="font-size:.85rem;">Assistência técnica de motores elétricos, ferramentas e eletrodomésticos em Guarulhos - SP.</p>
       </div>
       <div>
@@ -205,7 +205,7 @@
     </div>
     <div class="footer-bottom">
       <span>© 2026 Elétrica Rocar. Todos os direitos reservados.</span>
-      <span>Feito com dedicação para a Vila Yaya.</span>
+      <span><a href="politica-de-privacidade.html" style="color:inherit;text-decoration:underline;">Política de Privacidade</a></span>
     </div>
   </div>
 </footer>
@@ -220,8 +220,8 @@
   <div class="lightbox-thumbs" id="lightbox-thumbs"></div>
 </div>
 
-<script src="assets/site.js?v=40" type="module"></script>
-<script src="assets/hero-sparks.js?v=40"></script>
+<script src="assets/site.js?v=42" type="module"></script>
+<script src="assets/hero-sparks.js?v=42"></script>
 <script src="assets/chatbot.js?v=40" type="module"></script>
 <script type="module">
   import { fetchMaterialById, fetchMateriais, formatBRL, LABELS_CATEGORIA_MATERIAL, LABELS_APLICACAO_MATERIAL, whatsappLinkMaterial, materialCardHTML, submitMensagemContato, whatsappLink } from './assets/supabase-client.js';
@@ -269,7 +269,7 @@
     }
     fotoPrincipal.style.display = 'block';
     iconePrincipal.style.display = 'none';
-    const thumbsHTML = fotos.map((url, i) => `<img src="${url}" data-idx="${i}" alt="Miniatura ${i + 1}">`).join('');
+    const thumbsHTML = fotos.map((url, i) => `<img src="${url}" data-idx="${i}" alt="Miniatura ${i + 1}" loading="lazy">`).join('');
     galleryThumbs.innerHTML = fotos.length > 1 ? thumbsHTML : '';
     lightboxThumbs.innerHTML = thumbsHTML;
     galleryThumbs.querySelectorAll('img').forEach(t => t.addEventListener('click', () => mostrarFoto(Number(t.dataset.idx))));

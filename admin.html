@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css?v=41">
+<link rel="stylesheet" href="assets/style.css?v=42">
 </head>
 <body class="admin-body">
 
@@ -204,25 +204,20 @@
 
     <section class="admin-panel" id="panel-config" style="display:none;">
       <h2 style="margin-bottom:20px;">Configurações</h2>
-      <div class="form-card" style="max-width:520px;">
-        <h4 style="margin-bottom:.2em;">Chat com IA (Técnico Rocar)</h4>
-        <p class="muted" style="font-size:.85rem;margin-bottom:20px;">
-          Cole aqui a chave da API do Google Gemini para ativar o chat com IA no widget "Técnico Rocar".
-          Gere uma chave gratuita em <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--red);">aistudio.google.com/apikey</a>.
+      <div class="form-card" style="max-width:560px;">
+        <h4 style="margin-bottom:.2em;">Preenchimento com IA (Gemini)</h4>
+        <p class="muted" style="font-size:.85rem;margin-bottom:0;">
+          Por segurança, a chave da API do Google Gemini não é mais cadastrada aqui pelo navegador —
+          ela fica guardada apenas no servidor do Supabase (Edge Function <code>gemini-proxy</code>),
+          fora do alcance de qualquer visitante do site. O botão "Gerar com IA" nos formulários de
+          Serviços e Materiais continua funcionando normalmente para qualquer admin logado, sem precisar
+          configurar nada aqui.
         </p>
-        <form id="config-form">
-          <div class="field">
-            <label for="gemini-key">Chave da API do Gemini</label>
-            <input type="text" id="gemini-key" name="gemini_key" placeholder="AIza...">
-          </div>
-          <button type="submit" class="btn btn-primary">Salvar Chave</button>
-          <p id="config-feedback" class="form-feedback"></p>
-        </form>
       </div>
     </section>
   </main>
 </div>
 
-<script src="assets/admin.js?v=40" type="module"></script>
+<script src="assets/admin.js?v=42" type="module"></script>
 </body>
 </html>

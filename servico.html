@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css?v=41">
+<link rel="stylesheet" href="assets/style.css?v=42">
 </head>
 <body>
 <script>try{if(localStorage.getItem("rocarTheme")!=="light")document.body.classList.add("dark-mode");}catch(e){}</script>
@@ -143,7 +143,7 @@
   <div class="container">
     <div class="footer-grid">
       <div>
-        <div class="footer-logo"><img src="assets/logo.png" alt="Elétrica Rocar"><strong>Elétrica Rocar</strong></div>
+        <div class="footer-logo"><img src="assets/logo.png" alt="Elétrica Rocar" loading="lazy"><strong>Elétrica Rocar</strong></div>
         <p style="font-size:.85rem;">Assistência técnica de motores elétricos, ferramentas e eletrodomésticos em Guarulhos - SP.</p>
       </div>
       <div>
@@ -176,7 +176,7 @@
     </div>
     <div class="footer-bottom">
       <span>© 2026 Elétrica Rocar. Todos os direitos reservados.</span>
-      <span>Feito com dedicação para a Vila Yaya.</span>
+      <span><a href="politica-de-privacidade.html" style="color:inherit;text-decoration:underline;">Política de Privacidade</a></span>
     </div>
   </div>
 </footer>
@@ -185,8 +185,8 @@
   <svg viewBox="0 0 24 24"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.28-1.39c1.44.79 3.07 1.2 4.72 1.2h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.87 9.87 0 0 0 12.04 2zm5.8 14.14c-.24.68-1.4 1.3-1.93 1.38-.5.08-1.12.11-1.81-.11-.42-.13-.95-.31-1.64-.6-2.88-1.24-4.76-4.14-4.9-4.33-.14-.19-1.17-1.56-1.17-2.97 0-1.41.74-2.1 1-2.39.26-.29.57-.36.76-.36.19 0 .38 0 .55.01.18.01.41-.07.64.49.24.58.81 2 .88 2.14.07.14.12.31.02.5-.1.19-.15.31-.29.48-.15.17-.31.38-.44.51-.15.15-.3.31-.13.6.17.29.76 1.25 1.63 2.02 1.12 1 2.06 1.31 2.35 1.46.29.15.46.13.63-.05.17-.17.72-.84.91-1.13.19-.29.38-.24.64-.15.26.1 1.66.78 1.94.92.28.14.47.21.53.33.07.12.07.7-.17 1.37z"/></svg>
 </a>
 
-<script src="assets/site.js?v=40" type="module"></script>
-<script src="assets/hero-sparks.js?v=40"></script>
+<script src="assets/site.js?v=42" type="module"></script>
+<script src="assets/hero-sparks.js?v=42"></script>
 <script src="assets/chatbot.js?v=40" type="module"></script>
 <script type="module">
   import { fetchServicoByCodigo, fetchServicos, formatBRL, labelCategoria, labelEstoque, whatsappLinkServico, serviceCardHTML, submitSolicitacaoOrcamento, whatsappLink, isServicoSobOrcamento, linkOrcamentoServico } from './assets/supabase-client.js';
@@ -237,7 +237,7 @@
 
     const fotos = (servico.fotos && servico.fotos.length) ? servico.fotos : ['assets/fotos-oficina/logo-mural.jpeg'];
     document.getElementById('foto-principal').src = fotos[0];
-    document.getElementById('thumbs').innerHTML = fotos.map((f, i) => `<img src="${f}" class="${i===0?'active':''}" data-src="${f}">`).join('');
+    document.getElementById('thumbs').innerHTML = fotos.map((f, i) => `<img src="${f}" class="${i===0?'active':''}" data-src="${f}" loading="lazy">`).join('');
     document.querySelectorAll('#thumbs img').forEach(img => {
       img.addEventListener('click', () => {
         document.getElementById('foto-principal').src = img.dataset.src;
