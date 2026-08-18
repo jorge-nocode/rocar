@@ -9,14 +9,21 @@
 // ===================================================================
 (function () {
   const canvas = document.getElementById('hero-sparks');
-  if (!canvas || !canvas.getContext) return;
+  if (!canvas || !canvas.getContext) {
+    console.warn('[Faíscas Rocar] canvas #hero-sparks não encontrado no DOM — animação não iniciada.');
+    return;
+  }
 
   const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (prefersReducedMotion) return;
+  if (prefersReducedMotion) {
+    console.log('[Faíscas Rocar] prefers-reduced-motion ativo — animação desativada por acessibilidade.');
+    return;
+  }
 
   const ctx = canvas.getContext('2d');
-  const CORES = ['#FFD23F', '#FF9F1C', '#FF4B1F', '#FFEA00', '#FF6B35'];
+  const CORES = ['#FFD23F', '#FFAA00', '#FF9F1C', '#FF4500', '#FF6B35'];
   const GRAVIDADE = 0.045;
+  console.log('Faíscas Rocar Iniciadas');
 
   let w = 0, h = 0, dpr = 1;
   let particles = [];
@@ -106,12 +113,12 @@
       // Traço brilhante: linha curta entre a posição anterior e a
       // atual, simulando o rastro da faísca em movimento rápido.
       ctx.save();
-      ctx.globalAlpha = alpha * 0.55;
+      ctx.globalAlpha = alpha * 0.75;
       ctx.strokeStyle = p.cor;
-      ctx.lineWidth = Math.max(0.6, p.tamanho * 0.6);
+      ctx.lineWidth = Math.max(0.8, p.tamanho * 0.7);
       ctx.lineCap = 'round';
       ctx.shadowColor = p.cor;
-      ctx.shadowBlur = 4 + p.tamanho * 1.6;
+      ctx.shadowBlur = 8 + p.tamanho * 2.4;
       ctx.beginPath();
       ctx.moveTo(p.prevX, p.prevY);
       ctx.lineTo(p.x, p.y);
@@ -120,10 +127,10 @@
 
       // Ponta brilhante da faísca.
       ctx.save();
-      ctx.globalAlpha = alpha;
+      ctx.globalAlpha = Math.min(1, alpha * 1.15);
       ctx.fillStyle = p.cor;
       ctx.shadowColor = p.cor;
-      ctx.shadowBlur = 5 + p.tamanho * 2.2;
+      ctx.shadowBlur = 10 + p.tamanho * 3.2;
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.tamanho, 0, Math.PI * 2);
       ctx.fill();
