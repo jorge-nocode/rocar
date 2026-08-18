@@ -94,9 +94,21 @@ section{padding:44px 0;}
 .topbar-info{display:flex;gap:16px;align-items:center;}
 .topbar-info a{opacity:.9;display:flex;align-items:center;gap:6px;}
 .topbar-info a:hover{opacity:1;color:var(--red-light);}
-.topbar-links{display:flex;gap:16px;}
+.topbar-links{display:flex;gap:16px;align-items:center;}
 .topbar-links a:hover{color:var(--red-light);}
 @media(max-width:768px){.topbar-links{display:none;} .topbar-info{gap:10px;}}
+
+/* Botão de alternância de tema claro/escuro, no topbar de todas as páginas. */
+.theme-toggle-btn{
+  display:flex;align-items:center;justify-content:center;width:20px;height:20px;
+  background:none;border:none;color:#fff;opacity:.85;padding:0;cursor:pointer;transition:opacity .15s,color .15s;
+}
+.theme-toggle-btn:hover{opacity:1;color:var(--red-light);}
+.theme-toggle-btn svg{width:16px;height:16px;}
+.theme-toggle-btn .icon-sun{display:none;}
+.theme-toggle-btn .icon-moon{display:block;}
+body.dark-mode .theme-toggle-btn .icon-sun{display:block;}
+body.dark-mode .theme-toggle-btn .icon-moon{display:none;}
 
 /* ---------- Header ---------- */
 header.main{
@@ -737,3 +749,70 @@ body.admin-body .muted{color:var(--text-muted);}
 .faq-item summary::after{content:"+";font-size:1.3rem;color:var(--red);}
 .faq-item[open] summary::after{content:"−";}
 .faq-item p{margin-top:10px;color:var(--text-muted);font-size:.9rem;}
+
+/* ===================================================================
+   TEMA ESCURO GLOBAL (body.dark-mode) — todas as páginas públicas.
+   Ativado/desativado pelo botão de sol/lua no topbar (assets/site.js)
+   e persistido no localStorage ('rocarTheme'). A maior parte do site
+   já usa variáveis (--bg, --bg-alt, --panel, --text, --text-muted,
+   --border), então sobrescrevê-las aqui já escurece automaticamente
+   quase todas as seções/cards; os overrides pontuais abaixo cobrem
+   elementos com cores fixas (não-variáveis) que precisam inverter.
+=================================================================== */
+body.dark-mode{
+  --bg:#0a0a0a;
+  --bg-alt:#121212;
+  --panel:#161616;
+  --header-bg:#0a0a0a;
+  --text:#f5f5f3;
+  --text-muted:#a8a8a2;
+  --border:rgba(255,255,255,.14);
+}
+body.dark-mode{background:var(--bg);}
+
+/* Header/logo/menu mobile — o header usa --header-bg (já escurecido
+   acima); textos que usavam preto fixo (var(--black)) via elementos
+   específicos precisam virar branco para continuar legíveis. */
+body.dark-mode header.main{border-bottom-color:var(--border);}
+body.dark-mode .logo-text strong{color:#fff;}
+body.dark-mode .hamburger span{background:#fff;}
+body.dark-mode .icon-btn{background:rgba(255,255,255,.08);}
+body.dark-mode .icon-btn:hover{background:rgba(255,255,255,.16);}
+body.dark-mode .mobile-drawer{background:#0d0d0d;}
+body.dark-mode .mobile-drawer nav a{color:#fff;border-bottom-color:var(--border);}
+body.dark-mode .drawer-close{color:#fff;}
+
+/* Botões de ação: fundo branco / texto preto, invertendo o padrão
+   claro (fundo preto / texto branco), como pedido. */
+body.dark-mode .btn-primary,
+body.dark-mode .btn-black{background:#fff;color:#000;box-shadow:0 10px 24px rgba(255,255,255,.14);}
+body.dark-mode .btn-primary:hover,
+body.dark-mode .btn-black:hover{background:#eaeaea;color:#000;}
+body.dark-mode .btn-outline{border-color:#fff;color:#fff;}
+body.dark-mode .btn-outline:hover{background:#fff;color:#000;}
+
+/* Campos de formulário, filtros da loja e outros elementos com fundo
+   branco fixo (não-variável). */
+body.dark-mode .field input,
+body.dark-mode .field select,
+body.dark-mode .field textarea,
+body.dark-mode .shop-input,
+body.dark-mode .shop-select{
+  background:#1a1a1a;color:#fff;border-color:var(--border);
+}
+body.dark-mode .field input::placeholder,
+body.dark-mode .field textarea::placeholder{color:rgba(255,255,255,.4);}
+body.dark-mode .shop-cat-list button:hover,
+body.dark-mode .shop-cat-list button.active{color:#fff;}
+body.dark-mode .frete-calc input{background:#1a1a1a;color:#fff;border-color:var(--border);}
+
+/* Tabelas e listas de preço com fundo branco explícito. */
+body.dark-mode .price-table{background:var(--panel);}
+body.dark-mode .price-table td{border-color:var(--border);color:var(--text);}
+
+/* Carrossel/lightbox/tabs já usam var(--panel)/var(--bg-alt), então
+   escurecem sozinhos; só a sombra de foco do carrossel precisa de
+   ajuste de contraste. */
+body.dark-mode .carousel-arrow{background:var(--panel);border-color:var(--border);color:var(--text);}
+body.dark-mode .tabs-nav{border-color:var(--border);}
+body.dark-mode .tabs-nav button{color:var(--text-muted);}

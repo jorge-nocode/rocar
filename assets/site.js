@@ -8,7 +8,33 @@ document.addEventListener('DOMContentLoaded', () => {
   initMobileMenu();
   initNewsletter();
   markActiveNav();
+  initThemeToggle();
 });
+
+// ---------------------------------------------------------------
+// Tema escuro (dark mode) global. A classe 'dark-mode' já é aplicada
+// ao <body> assim que a página começa a carregar por um script inline
+// no topo do <body> (evita o "flash" de tela clara antes do JS rodar).
+// Aqui só ficamos responsáveis por: alternar a classe ao clicar no
+// botão do topbar e salvar a escolha no localStorage, para persistir
+// entre todas as páginas do site.
+// ---------------------------------------------------------------
+const THEME_STORAGE_KEY = 'rocarTheme';
+
+function initThemeToggle() {
+  const btn = document.getElementById('theme-toggle-btn');
+  if (!btn) return;
+
+  btn.addEventListener('click', () => {
+    const ativo = document.body.classList.toggle('dark-mode');
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, ativo ? 'dark' : 'light');
+    } catch (e) { /* localStorage indisponível (modo privado etc.) — ignora */ }
+    btn.setAttribute('aria-pressed', ativo ? 'true' : 'false');
+  });
+
+  btn.setAttribute('aria-pressed', document.body.classList.contains('dark-mode') ? 'true' : 'false');
+}
 
 function initMobileMenu() {
   const hamburger = document.querySelector('.hamburger');
