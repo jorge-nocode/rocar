@@ -8,6 +8,24 @@
 // ===================================================================
 import { whatsappLink } from './supabase-client.js';
 
+// ---------------------------------------------------------------
+// Sanitização defensiva contra XSS. Hoje RESPOSTAS é uma lista fixa
+// definida neste próprio arquivo (não vem de formulário nem do banco),
+// mas qualquer texto que for injetado via innerHTML passa por aqui
+// mesmo assim — se algum dia essas respostas passarem a vir de uma
+// fonte editável (ex: painel admin, Supabase), o código já está seguro
+// por padrão.
+// ---------------------------------------------------------------
+function escapeHTML(valor) {
+  if (valor === null || valor === undefined) return '';
+  return String(valor)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 const RESPOSTAS = [
   {
     label: 'Quero orçamento de motor elétrico',
@@ -65,7 +83,7 @@ function injectMarkup() {
 
 function renderQuickReplies() {
   const quick = document.getElementById('chat-quick');
-  quick.innerHTML = RESPOSTAS.map((r, i) => `<button data-i="${i}">${r.label}</button>`).join('');
+  quick.innerHTML = RESPOSTAS.map((r, i) => `<button data-i="${i}">${escapeHTML(r.label)}</button>`).join('');
   quick.querySelectorAll('button').forEach(btn => {
     btn.addEventListener('click', () => {
       const item = RESPOSTAS[btn.dataset.i];

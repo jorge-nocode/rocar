@@ -14,7 +14,7 @@ echo ""
 echo "=== Elétrica Rocar: enviando alterações para o GitHub ==="
 echo ""
 
-git push
+git push origin main
 
 echo ""
 echo "=== Push concluído com sucesso! O Vercel vai publicar o site automaticamente. ==="

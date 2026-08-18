@@ -10,7 +10,7 @@ echo.
 echo === Elétrica Rocar: enviando alterações para o GitHub ===
 echo.
 
-git push
+git push origin main
 
 if %ERRORLEVEL% NEQ 0 (
   echo.
