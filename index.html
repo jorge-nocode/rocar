@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css?v=29">
+<link rel="stylesheet" href="assets/style.css?v=30">
 </head>
 <body>
 <script>try{if(localStorage.getItem("rocarTheme")!=="light")document.body.classList.add("dark-mode");}catch(e){}</script>
@@ -71,15 +71,10 @@
 
 <main>
   <div class="container">
-    <section class="hero-carousel" id="hero-carousel">
-      <a href="servicos.html?categoria=eletrodomesticos" class="hero-slide active" style="--img-desktop:url('/assets/banner-eletrodomesticos.png');--img-mobile:url('/assets/banner-eletrodomesticos-mobile.png');" aria-label="Eletrodomésticos revisados"></a>
-      <a href="orcamento.html?categoria=motores-monofasicos" class="hero-slide" style="--img-desktop:url('/assets/banner-motores.png');--img-mobile:url('/assets/banner-motores-mobile.png');" aria-label="Rebobinamento de motores elétricos"></a>
-      <a href="servicos.html?categoria=ferramentas" class="hero-slide" style="--img-desktop:url('/assets/banner-ferramentas.png');--img-mobile:url('/assets/banner-ferramentas-mobile.png');" aria-label="Manutenção de ferramentas elétricas"></a>
-      <div class="hero-dots">
-        <button class="hero-dot active" data-slide="0" aria-label="Slide 1"></button>
-        <button class="hero-dot" data-slide="1" aria-label="Slide 2"></button>
-        <button class="hero-dot" data-slide="2" aria-label="Slide 3"></button>
-      </div>
+    <section class="hero-carousel hero-video-wrap" id="hero-carousel">
+      <video class="hero-video" autoplay muted loop playsinline preload="auto" poster="/assets/banner-eletrodomesticos.png">
+        <source src="/assets/hero-video.mp4" type="video/mp4">
+      </video>
     </section>
 
     <div class="trust-bar">
@@ -140,7 +135,11 @@
 
   <section class="section-tight">
     <div class="container">
-      <a href="https://wa.me/551134353809?text=Ol%C3%A1!%20Quero%20saber%20mais%20sobre%20os%20micro-ondas%20seminovos%20%C3%A0%20venda." target="_blank" class="promo-banner" style="--img-desktop:url('/assets/banner-seminovos-mobile.png');--img-mobile:url('/assets/banner-seminovos.png');" aria-label="Micro-ondas Seminovos - Garanta o seu"></a>
+      <a href="https://wa.me/551134353809?text=Ol%C3%A1!%20Quero%20saber%20mais%20sobre%20os%20micro-ondas%20seminovos%20%C3%A0%20venda." target="_blank" class="promo-banner promo-banner-video" aria-label="Micro-ondas Seminovos - Garanta o seu">
+        <video class="promo-video" autoplay muted loop playsinline preload="auto">
+          <source src="/assets/banner-seminovos-video.mp4" type="video/mp4">
+        </video>
+      </a>
     </div>
   </section>
 
@@ -378,41 +377,6 @@
     const passo = () => (track.querySelector('.service-card')?.offsetWidth || 240) + 20;
     prev.addEventListener('click', () => track.scrollBy({ left: -passo(), behavior: 'smooth' }));
     next.addEventListener('click', () => track.scrollBy({ left: passo(), behavior: 'smooth' }));
-  })();
-</script>
-<script>
-  (function(){
-    const carrossel = document.getElementById('hero-carousel');
-    if (!carrossel) return;
-    const slides = carrossel.querySelectorAll('.hero-slide');
-    const dots = carrossel.querySelectorAll('.hero-dot');
-    let atual = 0;
-    let timer;
-
-    function irPara(i) {
-      slides[atual].classList.remove('active');
-      dots[atual].classList.remove('active');
-      atual = i % slides.length;
-      slides[atual].classList.add('active');
-      dots[atual].classList.add('active');
-    }
-
-    function proximo() { irPara(atual + 1); }
-
-    function iniciarAuto() {
-      clearInterval(timer);
-      timer = setInterval(proximo, 5000);
-    }
-
-    dots.forEach((dot, i) => {
-      dot.addEventListener('click', (e) => {
-        e.preventDefault();
-        irPara(i);
-        iniciarAuto();
-      });
-    });
-
-    iniciarAuto();
   })();
 </script>
 </body>
