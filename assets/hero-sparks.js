@@ -1,9 +1,11 @@
 // ===================================================================
 // ELÉTRICA ROCAR — hero-sparks.js
-// Camada de faíscas de esmeril/lixadeira animadas no fundo do hero da
-// home. Canvas leve, partículas simples (sem imagens), pausa quando a
-// aba fica invisível ou o hero sai da viewport, e respeita
-// prefers-reduced-motion. Vanilla JS, sem dependências.
+// Faíscas de esmeril/lixadeira como plano de fundo GLOBAL de toda a
+// página (fixo na viewport, atrás de todo o conteúdo). Rajadas com
+// trajetória em arco/diagonal, gravidade e traço brilhante, nascendo
+// da base e das laterais da tela inteira. Canvas leve, sem imagens,
+// pausa quando a aba fica invisível, e respeita prefers-reduced-motion.
+// Vanilla JS, sem dependências.
 // ===================================================================
 (function () {
   const canvas = document.getElementById('hero-sparks');
@@ -12,42 +14,66 @@
   const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (prefersReducedMotion) return;
 
-  const wrap = canvas.parentElement;
   const ctx = canvas.getContext('2d');
-
   const CORES = ['#FFD23F', '#FF9F1C', '#FF4B1F', '#FFEA00', '#FF6B35'];
+  const GRAVIDADE = 0.045;
 
   let w = 0, h = 0, dpr = 1;
   let particles = [];
   let rafId = null;
   let rodando = false;
-  let maxParticulas = 40;
+  let maxParticulas = 55;
 
   function redimensionar() {
     dpr = Math.min(window.devicePixelRatio || 1, 2);
-    w = wrap.clientWidth;
-    h = wrap.clientHeight;
+    w = window.innerWidth;
+    h = window.innerHeight;
     canvas.width = Math.max(1, Math.round(w * dpr));
     canvas.height = Math.max(1, Math.round(h * dpr));
     canvas.style.width = w + 'px';
     canvas.style.height = h + 'px';
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     // Menos partículas em telas pequenas, para não pesar no mobile.
-    maxParticulas = w < 640 ? 18 : (w < 1024 ? 28 : 42);
+    maxParticulas = w < 640 ? 26 : (w < 1024 ? 40 : 60);
   }
 
+  // Cada faísca nasce como uma "rajada" com velocidade inicial rápida
+  // (para cima e para um dos lados), e a gravidade vai curvando a
+  // trajetória em arco até ela cair/apagar — igual a uma faísca real
+  // de esmeril. Nasce da base da tela inteira, ou ocasionalmente das
+  // laterais (esquerda/direita), reforçando a sensação de "oficina".
   function novaParticula() {
-    const tamanho = 1 + Math.random() * 2.4;
+    const origem = Math.random();
+    let x, y, velX, velY;
+
+    if (origem < 0.72) {
+      // base da tela inteira
+      x = Math.random() * w;
+      y = h + Math.random() * 12;
+      velX = (Math.random() - 0.5) * 3.2;
+      velY = -(2.4 + Math.random() * 3.4);
+    } else if (origem < 0.86) {
+      // lateral esquerda
+      x = -6;
+      y = h * (0.35 + Math.random() * 0.65);
+      velX = 1.6 + Math.random() * 2.4;
+      velY = -(1.2 + Math.random() * 2.4);
+    } else {
+      // lateral direita
+      x = w + 6;
+      y = h * (0.35 + Math.random() * 0.65);
+      velX = -(1.6 + Math.random() * 2.4);
+      velY = -(1.2 + Math.random() * 2.4);
+    }
+
+    const tamanho = 1 + Math.random() * 2.2;
     return {
-      x: Math.random() * w,
-      y: h + Math.random() * 14,
+      x, y, prevX: x, prevY: y,
       tamanho,
-      velY: 0.55 + Math.random() * 1.5,
-      velX: (Math.random() - 0.5) * 0.9,
+      velX, velY,
       vida: 0,
-      vidaMax: 55 + Math.random() * 75,
-      cor: CORES[(Math.random() * CORES.length) | 0],
-      flicker: Math.random() * Math.PI * 2
+      vidaMax: 45 + Math.random() * 55,
+      cor: CORES[(Math.random() * CORES.length) | 0]
     };
   }
 
@@ -60,18 +86,39 @@
     for (let i = particles.length - 1; i >= 0; i--) {
       const p = particles[i];
       p.vida++;
-      p.x += p.velX + Math.sin((p.vida + p.flicker) * 0.12) * 0.35;
-      p.y -= p.velY;
-      p.velY *= 0.995;
+
+      p.prevX = p.x;
+      p.prevY = p.y;
+      p.velY += GRAVIDADE; // gravidade puxando a trajetória em arco
+      p.velX *= 0.985; // leve resistência do ar
+      p.x += p.velX;
+      p.y += p.velY;
 
       const razao = p.vida / p.vidaMax;
-      const alpha = razao < 0.12 ? razao / 0.12 : Math.max(0, 1 - (razao - 0.12) / 0.88);
+      const alpha = razao < 0.08 ? razao / 0.08 : Math.max(0, 1 - (razao - 0.08) / 0.92);
 
-      if (p.vida >= p.vidaMax || p.y < -12 || alpha <= 0) {
+      const foraDaTela = p.x < -30 || p.x > w + 30 || p.y > h + 30;
+      if (p.vida >= p.vidaMax || foraDaTela || alpha <= 0) {
         particles[i] = novaParticula();
         continue;
       }
 
+      // Traço brilhante: linha curta entre a posição anterior e a
+      // atual, simulando o rastro da faísca em movimento rápido.
+      ctx.save();
+      ctx.globalAlpha = alpha * 0.55;
+      ctx.strokeStyle = p.cor;
+      ctx.lineWidth = Math.max(0.6, p.tamanho * 0.6);
+      ctx.lineCap = 'round';
+      ctx.shadowColor = p.cor;
+      ctx.shadowBlur = 4 + p.tamanho * 1.6;
+      ctx.beginPath();
+      ctx.moveTo(p.prevX, p.prevY);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+      ctx.restore();
+
+      // Ponta brilhante da faísca.
       ctx.save();
       ctx.globalAlpha = alpha;
       ctx.fillStyle = p.cor;
@@ -112,11 +159,4 @@
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) parar(); else iniciar();
   });
-
-  if ('IntersectionObserver' in window) {
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => (entry.isIntersecting ? iniciar() : parar()));
-    }, { threshold: 0.05 });
-    io.observe(wrap);
-  }
 })();
