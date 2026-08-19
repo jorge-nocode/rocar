@@ -595,13 +595,13 @@ Não há componentização real em nível de framework (sem React/Vue) — a "co
 
 | Achado | Severidade | Detalhe |
 |---|---|---|
-| `lang="pt-BR"` em todas as páginas | ✅ Conforme | `[VERIFICADO NO PROJETO ATUAL]` |
+| `lang="pt-BR"` em todas as páginas | **OK** Conforme | `[VERIFICADO NO PROJETO ATUAL]` |
 | `alt` ausente em thumbnail gerada via JS (`servico.html`, linha do template `thumbs.innerHTML`) | **Médio** | Único `<img>` sem `alt` encontrado no projeto inteiro; demais imagens têm `alt` preenchido (mesmo que vazio/decorativo em alguns casos) |
-| Labels de formulário | ✅ Conforme na maioria | `<label for="...">` presente nos formulários de Contato, Orçamento, Empresas, Material, Serviço e Admin; **ausente** em `index.html`, `materiais.html`, `politica-de-privacidade.html` e `quem-somos.html` — mas essas páginas não têm campos de formulário próprios que exijam label (exceto busca/filtro em `materiais.html`, que usa `placeholder` sem `<label>` visível) |
-| Botões de ícone com `aria-label` | ✅ Conforme | hamburger, fechar drawer, toggle de tema, setas de carrossel — todos com `aria-label` |
+| Labels de formulário | **OK** Conforme na maioria | `<label for="...">` presente nos formulários de Contato, Orçamento, Empresas, Material, Serviço e Admin; **ausente** em `index.html`, `materiais.html`, `politica-de-privacidade.html` e `quem-somos.html` — mas essas páginas não têm campos de formulário próprios que exijam label (exceto busca/filtro em `materiais.html`, que usa `placeholder` sem `<label>` visível) |
+| Botões de ícone com `aria-label` | **OK** Conforme | hamburger, fechar drawer, toggle de tema, setas de carrossel — todos com `aria-label` |
 | Contraste de cores (WCAG AA) | `[NÃO VERIFICADO]` | Sem ferramenta de medição de contraste disponível neste ambiente; a paleta (vermelho sobre preto/branco) é visualmente de alto contraste, mas isso não substitui uma medição formal |
 | Foco de teclado visível | `[PARCIALMENTE VERIFICADO]` | Não há `outline:none` global suprimindo foco (bom sinal), mas não foi testada a ordem de tabulação completa nem estilo de foco customizado |
-| Landmarks semânticos (`<header>`, `<main>`, `<footer>`, `<nav>`) | ✅ Conforme | Presentes em todas as páginas | 
+| Landmarks semânticos (`<header>`, `<main>`, `<footer>`, `<nav>`) | **OK** Conforme | Presentes em todas as páginas | 
 | Vídeos com legendas/transcrição | **Baixo** | Não aplicável — vídeos são puramente decorativos (hero/banner), sem fala/conteúdo informativo |
 | Carrossel navegável por teclado | **Médio** | Setas focáveis funcionam; o track em si não é alcançável por Tab para scroll direto (ver Seção 10.2) |
 | Modais/drawers com foco preso (focus trap) | `[NÃO VERIFICADO]` | Drawer mobile fecha ao clicar fora/no X, mas não foi confirmado se o foco de teclado fica preso dentro dele enquanto aberto (boa prática WCAG para modais) |
@@ -614,7 +614,7 @@ Não há componentização real em nível de framework (sem React/Vue) — a "co
 
 | Item | Status | Detalhe |
 |---|---|---|
-| `<title>` único por página | ✅ | Todas as 10 páginas públicas têm title descritivo; `admin.html` também (correto, mas irrelevante para SEO por ter `noindex`) |
+| `<title>` único por página | **OK** | Todas as 10 páginas públicas têm title descritivo; `admin.html` também (correto, mas irrelevante para SEO por ter `noindex`) |
 | `<meta name="description">` | **Parcial** | Presente em 7 das 9 páginas públicas com conteúdo indexável; **ausente em `servico.html` e `material.html`** — que usam `<title id="page-title">` preenchido via JS, mas sem `<meta name="description">` correspondente sendo atualizado dinamicamente |
 | `<link rel="canonical">` | **Ausente em todas as páginas** | `[NÃO ENCONTRADO]` |
 | `<meta name="robots">` | Só em `admin.html` (`noindex, nofollow`, correto) | Páginas públicas não têm a tag (comportamento padrão de indexação, o que é aceitável, mas explicitar `index, follow` seria mais robusto) |
@@ -623,10 +623,10 @@ Não há componentização real em nível de framework (sem React/Vue) — a "co
 | Open Graph (`og:title`, `og:image` etc.) | **Não encontrado em nenhuma página** | Compartilhamento em redes sociais (WhatsApp, Facebook) não terá preview customizado — usará fallback genérico do navegador/rede |
 | Twitter Cards | **Não encontrado** | `[NÃO ENCONTRADO]` |
 | Dados estruturados (schema.org — `LocalBusiness`, `Product`) | **Não encontrado** | Uma oportunidade real para um negócio local: marcação `LocalBusiness` ajudaria em resultados de busca/mapas |
-| `favicon` | ✅ | `assets/favicon.ico` referenciado em todas as páginas |
+| `favicon` | **OK** | `assets/favicon.ico` referenciado em todas as páginas |
 | `manifest.json` (PWA) | **Não encontrado** | Não aplicável — projeto não é uma PWA |
 | Hierarquia de headings (`h1`→`h2`→`h3`) | `[PARCIALMENTE VERIFICADO]` | Estrutura geral parece seguir hierarquia, mas não foi auditada página por página nesta sessão |
-| URLs amigáveis | ✅ | URLs limpas por natureza de arquivo estático (`servico.html?codigo=X`), sem parâmetros excessivos |
+| URLs amigáveis | **OK** | URLs limpas por natureza de arquivo estático (`servico.html?codigo=X`), sem parâmetros excessivos |
 | Redirects / páginas 404 customizadas | `[NÃO VERIFICADO]` | Depende de configuração do Vercel, não do código-fonte deste repositório |
 
 **Ponto de atenção real e acionável:** ausência total de sitemap.xml, robots.txt, Open Graph e dados estruturados é a lacuna de SEO técnico mais concreta deste projeto — nenhuma delas é complexa de implementar, mas nenhuma existe hoje. `[VERIFICADO NO PROJETO ATUAL]`
